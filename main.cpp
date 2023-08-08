@@ -6,7 +6,7 @@
 //During the simulation, some pendulums might get an enormous amount of angular acceleration, making the program eventually crash.
 //To prevent this, the pendulums with a high acceleration will be deleted.
 
-int main(int argc, char** argv){
+int main(int argc, char** args){
 
 	Simulation MySimulation(10);
 
