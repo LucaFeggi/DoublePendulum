@@ -61,7 +61,7 @@ void Simulation::DrawPendulums(){
 
 void Simulation::Cycle(){
 	while (!Quit){
-		long double IterationStart = SDL_GetPerformanceCounter();
+		double IterationStart = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&Event))
 			if(Event.type == SDL_QUIT)
 				Quit = true;
@@ -72,8 +72,9 @@ void Simulation::Cycle(){
 	 	this->DrawPendulums();
 		SDL_UpdateWindowSurface(Window);
 		
-		long double IterationEnd = SDL_GetPerformanceCounter();
-		long double elapsedMS = (IterationEnd - IterationStart) / ((long double)SDL_GetPerformanceFrequency() * 1000.0f);
-		SDL_Delay(floor((1000.0f/FPS) - elapsedMS));
+		double IterationEnd = SDL_GetPerformanceCounter();
+		double ElapsedSeconds = (IterationEnd - IterationStart) / (double)SDL_GetPerformanceFrequency();
+		double Delay = 33.333f - (ElapsedSeconds * 1000.0f);
+		SDL_Delay(Delay);
 	}
 }
