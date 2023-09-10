@@ -75,6 +75,7 @@ void Simulation::Cycle(){
 		double IterationEnd = SDL_GetPerformanceCounter();
 		double ElapsedSeconds = (IterationEnd - IterationStart) / (double)SDL_GetPerformanceFrequency();
 		double Delay = 33.333f - (ElapsedSeconds * 1000.0f);
-		SDL_Delay(Delay);
+		if(Delay > 0)
+			SDL_Delay(std::max(0, (int) Delay));
 	}
 }
