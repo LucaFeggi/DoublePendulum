@@ -8,7 +8,7 @@
 
 class DoublePendulum{
 	public:
-		DoublePendulum(int WindowWidth, int WindowHeight, long double FPS, SDL_Surface *Surface, long double InitialAngle = M_PI);
+		DoublePendulum(int WindowWidth, int WindowHeight, double FPS, SDL_Surface *Surface, double InitialAngle = M_PI);
 		~DoublePendulum();
 		void Erase();
 		bool IsAccelerated();
@@ -18,7 +18,7 @@ class DoublePendulum{
 		Node *FirstNode;
 		Node *SecondNode;
 		int x, y;
-		long double g;
+		double g;
 		int WindowWidth;
 		SDL_Surface *Surface;
 };

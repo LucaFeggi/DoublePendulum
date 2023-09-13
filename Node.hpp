@@ -2,12 +2,12 @@
 
 class Node{
 	public:
-		Node(int *x0, int *y0, long double Length = 100.0f, long double Mass = 5.0f, long double InitialAngle = M_PI/4.0f);
+		Node(int *x0, int *y0, double Length = 100.0f, double Mass = 5.0f, double InitialAngle = M_PI/4.0f);
 		int *x0, *y0;
 		int x1, y1;
-		long double Length;
-		long double Mass;
-		long double Angle;
-		long double AngularVel;
-		long double AngularAcc;
+		double Length;
+		double Mass;
+		double Angle;
+		double AngularVel;
+		double AngularAcc;
 };

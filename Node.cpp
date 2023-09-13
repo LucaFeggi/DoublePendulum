@@ -3,7 +3,7 @@
 
 #include "Node.hpp"
 
-Node::Node(int *x0, int *y0, long double Length, long double Mass, long double InitialAngle){
+Node::Node(int *x0, int *y0, double Length, double Mass, double InitialAngle){
 	this->x0 = x0;
 	this->y0 = y0;
 	this->Mass = Mass;

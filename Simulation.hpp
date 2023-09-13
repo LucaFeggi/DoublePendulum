@@ -16,9 +16,9 @@ class Simulation{
 		void Cycle();
 	private:
 		int WindowWidth, WindowHeight;
-		long double FPS;
-		SDL_Surface *Surface = nullptr;
+		double FPS;
 		SDL_Window *Window = nullptr;
+		SDL_Surface *Surface = nullptr;
 		bool Quit;
 		SDL_Event Event;
 		DoublePendulum **Pendulums = nullptr;

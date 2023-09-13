@@ -4,7 +4,7 @@
 #include "DoublePendulum.hpp"
 #include "DrawingFunctions.hpp"
 
-DoublePendulum::DoublePendulum(int WindowWidth, int WindowHeight, long double FPS, SDL_Surface *Surface, long double InitialAngle){
+DoublePendulum::DoublePendulum(int WindowWidth, int WindowHeight, double FPS, SDL_Surface *Surface, double InitialAngle){
 	this->WindowWidth = WindowWidth;
 	this->Surface = Surface;
 	this->x = WindowWidth/2;
@@ -38,9 +38,9 @@ bool DoublePendulum::IsAccelerated(){
 void DoublePendulum::Update(){
 
 //Lagrange equation solved for angular acceleration using Euler-Lagrange formula
-	long double Num1 = -sin(FirstNode->Angle-SecondNode->Angle)*(SecondNode->Mass*FirstNode->Length*FirstNode->AngularVel*FirstNode->AngularVel*cos(FirstNode->Angle-SecondNode->Angle)+SecondNode->Mass*SecondNode->Length*SecondNode->AngularVel*SecondNode->AngularVel);
-	long double Num2 = -g*((FirstNode->Mass+SecondNode->Mass)*sin(FirstNode->Angle)-SecondNode->Mass*sin(SecondNode->Angle)*cos(FirstNode->Angle-SecondNode->Angle));
-	long double Den = FirstNode->Length*(FirstNode->Mass + SecondNode->Mass*sin(FirstNode->Angle-SecondNode->Angle)*sin(FirstNode->Angle-SecondNode->Angle));
+	double Num1 = -sin(FirstNode->Angle-SecondNode->Angle)*(SecondNode->Mass*FirstNode->Length*FirstNode->AngularVel*FirstNode->AngularVel*cos(FirstNode->Angle-SecondNode->Angle)+SecondNode->Mass*SecondNode->Length*SecondNode->AngularVel*SecondNode->AngularVel);
+	double Num2 = -g*((FirstNode->Mass+SecondNode->Mass)*sin(FirstNode->Angle)-SecondNode->Mass*sin(SecondNode->Angle)*cos(FirstNode->Angle-SecondNode->Angle));
+	double Den = FirstNode->Length*(FirstNode->Mass + SecondNode->Mass*sin(FirstNode->Angle-SecondNode->Angle)*sin(FirstNode->Angle-SecondNode->Angle));
 	FirstNode->AngularAcc = (Num1 + Num2) / Den;
 	
 	Num1 = sin(FirstNode->Angle-SecondNode->Angle)*((FirstNode->Mass+SecondNode->Mass)*FirstNode->Length*FirstNode->AngularVel*FirstNode->AngularVel+SecondNode->Mass*SecondNode->Length*SecondNode->AngularVel*SecondNode->AngularVel*cos(FirstNode->Angle-SecondNode->Angle));

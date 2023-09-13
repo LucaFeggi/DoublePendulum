@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include "Simulation.hpp"
-
+#include <iostream>
 Simulation::Simulation(int PendulumsNumber){
 	WindowWidth = 1280;
 	WindowHeight = 720;
@@ -22,7 +22,7 @@ Simulation::~Simulation(){
 }
 
 void Simulation::InitPendulums(){
-	long double HalfPi = M_PI/2.0f;
+	double HalfPi = M_PI/2.0f;
 	for(int i = 0; i < PendulumsNumber; i++){
 		Pendulums[i] = new DoublePendulum(WindowWidth, WindowHeight, FPS, Surface, HalfPi);
 		HalfPi -= 0.0001f;
