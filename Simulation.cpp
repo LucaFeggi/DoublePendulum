@@ -5,7 +5,7 @@
 Simulation::Simulation(int PendulumsNumber){
 	WindowWidth = 1280;
 	WindowHeight = 720;
-	FPS = 30.0f;
+	FPS = 30.0;
 	this->PendulumsNumber = PendulumsNumber;
 	SDL_Init(SDL_INIT_VIDEO);
 	Window = SDL_CreateWindow("Pendulum", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowWidth, WindowHeight, SDL_WINDOW_SHOWN);
@@ -22,10 +22,10 @@ Simulation::~Simulation(){
 }
 
 void Simulation::InitPendulums(){
-	double HalfPi = M_PI/2.0f;
+	double HalfPi = M_PI/2.0;
 	for(int i = 0; i < PendulumsNumber; i++){
 		Pendulums[i] = new DoublePendulum(WindowWidth, WindowHeight, FPS, Surface, HalfPi);
-		HalfPi -= 0.0001f;
+		HalfPi -= 0.0001;
 	}
 }
 		
@@ -74,7 +74,7 @@ void Simulation::Cycle(){
 		
 		double IterationEnd = SDL_GetPerformanceCounter();
 		double ElapsedSeconds = (IterationEnd - IterationStart) / (double)SDL_GetPerformanceFrequency();
-		double Delay = 33.333f - (ElapsedSeconds * 1000.0f);
+		double Delay = 33.333 - (ElapsedSeconds * 1000.0);
 		if(Delay > 0)
 			SDL_Delay(std::max(0, (int) Delay));
 	}

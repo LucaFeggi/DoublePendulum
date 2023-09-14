@@ -9,9 +9,9 @@ DoublePendulum::DoublePendulum(int WindowWidth, int WindowHeight, double FPS, SD
 	this->Surface = Surface;
 	this->x = WindowWidth/2;
 	this->y = WindowHeight/2;
-	g = 9.81f/FPS;
-	FirstNode = new Node(&this->x, &this->y, 100.0f, 10.0f, InitialAngle);
-	SecondNode = new Node(&(FirstNode)->x1, &(FirstNode)->y1, 100.0f, 10.0f, InitialAngle);
+	g = 9.81/FPS;
+	FirstNode = new Node(&this->x, &this->y, 100.0, 10.0, InitialAngle);
+	SecondNode = new Node(&(FirstNode)->x1, &(FirstNode)->y1, 100.0, 10.0, InitialAngle);
 	if(FirstNode->Length + SecondNode->Length >= WindowHeight/2){
 		std::cout << "Invalid node length!\nThe sum of all the nodes length must be less than WindowHeight/2.\n";
 	}
@@ -30,7 +30,7 @@ void DoublePendulum::Erase(){
 }
 
 bool DoublePendulum::IsAccelerated(){
-	if(FirstNode->AngularAcc < -1.001f*g || FirstNode->AngularAcc > 1.001f*g || SecondNode->AngularAcc < -1.001f*g || SecondNode->AngularAcc > 1.001f*g)
+	if(FirstNode->AngularAcc < -1.001*g || FirstNode->AngularAcc > 1.001*g || SecondNode->AngularAcc < -1.001*g || SecondNode->AngularAcc > 1.001*g)
 		return true;
 	return false;
 }

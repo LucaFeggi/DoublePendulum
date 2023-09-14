@@ -9,8 +9,8 @@ Node::Node(int *x0, int *y0, double Length, double Mass, double InitialAngle){
 	this->Mass = Mass;
 	this->Length = Length;
 	this->Angle = InitialAngle;
-	AngularVel = 0.0f;
-	AngularAcc = 0.0f;
+	AngularVel = 0.0;
+	AngularAcc = 0.0;
 	x1 = *this->x0 + Length*sin(Angle);
 	y1 = *this->y0 + Length*cos(Angle);
 }

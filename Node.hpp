@@ -2,7 +2,7 @@
 
 class Node{
 	public:
-		Node(int *x0, int *y0, double Length = 100.0f, double Mass = 5.0f, double InitialAngle = M_PI/4.0f);
+		Node(int *x0, int *y0, double Length = 100.0, double Mass = 5.0, double InitialAngle = M_PI/4.0);
 		int *x0, *y0;
 		int x1, y1;
 		double Length;
