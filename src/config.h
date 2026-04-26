@@ -52,27 +52,3 @@
 
 
 #endif // CONFIG_H
-
-/*
-DoublePendulum/
-├── CMakeLists.txt              # Entry point principale
-├── src/
-│   ├── core/                   # SEMPRE compilato (Agnostico)
-│   │   ├── simulation.c        # Logica fisica
-│   │   ├── physics_jobs.c      # Funzioni wrapper per il threadpool
-│   │   └── types.h             # real_t (float/double), Pendulum struct
-│   ├── platform/               # Scelta da CMake (Hardware dependent)
-│   │   ├── desktop/            # Se target == Win/Lin
-│   │   │   ├── threadpool_win.c
-│   │   │   └── sdl_renderer.c
-│   │   ├── esp32/              # Se target == ESP32
-│   │   │   ├── threadpool_esp.c
-│   │   │   └── display_driver.c
-│   │   └── common/             # Interfacce (Header con i prototipi)
-│   │       ├── threadpool.h
-│   │       └── renderer_interface.h
-│   └── app/                    # Il "Game Loop" (Compilato sempre)
-│       ├── main.c
-│       └── render_bridge.c     # Contiene i Job di preparazione grafica
-└── cmake/                      # Script per toolchain (opzionale)
-*/

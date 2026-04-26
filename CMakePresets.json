@@ -7,28 +7,28 @@
   },
   "configurePresets": [
     {
-      "name": "gcc-ninja",
+      "name": "native-ninja",
       "hidden": true,
       "generator": "Ninja",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/native.cmake",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
       "name": "debug",
-      "displayName": "Debug (GCC Ninja)",
-      "inherits": "gcc-ninja",
-      "binaryDir": "${sourceDir}/.build/debug",
+      "displayName": "Debug (native Ninja)",
+      "inherits": "native-ninja",
+      "binaryDir": "${sourceDir}/.build/${hostSystemName}/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "release",
-      "displayName": "Release (GCC Ninja)",
-      "inherits": "gcc-ninja",
-      "binaryDir": "${sourceDir}/.build/release",
+      "displayName": "Release (native Ninja)",
+      "inherits": "native-ninja",
+      "binaryDir": "${sourceDir}/.build/${hostSystemName}/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }

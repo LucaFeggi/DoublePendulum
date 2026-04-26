@@ -26,13 +26,13 @@ bool window_init(Window *window){
     }
     SDL_SetWindowMinimumSize(window->ptr, w / 5, h / 5);
 
-    SDL_Surface *icon = SDL_LoadBMP("assets/icon/icon.bmp");
+    SDL_Surface *icon = SDL_LoadBMP("../../assets/icon/icon.bmp");
     if(icon != NULL) {
         SDL_SetWindowIcon(window->ptr, icon);
         SDL_FreeSurface(icon);
     }
     else {
-        SDL_Log("Warning: Could not load window icon 'res/bpm/icon.bmp': %s", SDL_GetError());
+        SDL_Log("Warning: Could not load window icon 'assets/icon/icon.bmp': %s", SDL_GetError());
     }
 
     window->title_timer = 0.0;

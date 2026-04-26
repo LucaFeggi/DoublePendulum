@@ -4,15 +4,27 @@ cmake_policy(SET CMP0091 NEW)
 
 project(DoublePendulum LANGUAGES C)
 
-include(CheckIncludeFile)
+include(CheckCSourceCompiles)
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    message(FATAL_ERROR "DoublePendulum requires GCC. Configure with one of the GCC Ninja presets.")
+if(WIN32)
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        message(FATAL_ERROR "Windows builds require MSVC. Use the CMake presets from a Visual Studio Developer shell.")
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR "Linux builds require GCC. Use the CMake presets.")
+    endif()
+else()
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
 
 set(DOUBLE_PENDULUM_OUTPUT_DIR "${CMAKE_BINARY_DIR}")
 
@@ -36,7 +48,38 @@ set(SDL_TESTS OFF CACHE BOOL "Do not build SDL2 tests" FORCE)
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "Do not install SDL2 from this project" FORCE)
 add_subdirectory("${SDL2_ROOT}" "${CMAKE_BINARY_DIR}/externals/SDL2" EXCLUDE_FROM_ALL)
 
-check_include_file(threads.h DOUBLE_PENDULUM_HAVE_C11_THREADS)
+find_package(Threads REQUIRED)
+
+set(DOUBLE_PENDULUM_SAVED_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+set(DOUBLE_PENDULUM_SAVED_CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES}")
+
+if(MSVC)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /std:c11")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c11")
+endif()
+
+set(CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+check_c_source_compiles("
+    #include <threads.h>
+
+    static int worker(void *arg) {
+        (void)arg;
+        return 0;
+    }
+
+    int main(void) {
+        thrd_t thread;
+        if(thrd_create(&thread, worker, 0) != thrd_success) {
+            return 1;
+        }
+        thrd_join(thread, 0);
+        return 0;
+    }
+" DOUBLE_PENDULUM_HAVE_C11_THREADS)
+
+set(CMAKE_REQUIRED_FLAGS "${DOUBLE_PENDULUM_SAVED_CMAKE_REQUIRED_FLAGS}")
+set(CMAKE_REQUIRED_LIBRARIES "${DOUBLE_PENDULUM_SAVED_CMAKE_REQUIRED_LIBRARIES}")
 
 set(DOUBLE_PENDULUM_RENDERER_BACKEND "sdl" CACHE STRING "Renderer backend selected at build time")
 set_property(CACHE DOUBLE_PENDULUM_RENDERER_BACKEND PROPERTY STRINGS sdl)
@@ -77,11 +120,10 @@ target_include_directories(DoublePendulum PRIVATE
 target_compile_definitions(DoublePendulum PRIVATE SDL_MAIN_HANDLED)
 
 if(NOT DOUBLE_PENDULUM_HAVE_C11_THREADS)
-    message(FATAL_ERROR "DoublePendulum requires a GCC toolchain with C11 <threads.h> support.")
+    message(FATAL_ERROR "DoublePendulum requires C11 <threads.h>. On Windows, use Visual Studio 2022 17.8 or newer. On Linux, use a GCC/libc combination with C11 threads support.")
 endif()
 
 target_link_libraries(DoublePendulum PRIVATE SDL2::SDL2)
-find_package(Threads REQUIRED)
 target_link_libraries(DoublePendulum PRIVATE Threads::Threads)
 
 if(UNIX AND NOT APPLE)
@@ -89,9 +131,8 @@ if(UNIX AND NOT APPLE)
 endif()
 
 target_compile_options(DoublePendulum PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
+    $<$<C_COMPILER_ID:MSVC>:/W4>
+    $<$<C_COMPILER_ID:GNU>:-Wall -Wextra -Wpedantic>
 )
 
 set_target_properties(DoublePendulum PROPERTIES
