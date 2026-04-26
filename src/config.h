@@ -34,12 +34,12 @@
 #define DT 1.0/1000.0		// dt for physics update rate (1.0/1000.0 -> simulation updates at 1000Hz)
 #define SPEED_FACTOR 3.0	// speed factor for faster pendulum movement
 
-#define TOTAL_PENDULUMS 5        // total number of pendulums in the simulation (must be >= 1)
+#define TOTAL_PENDULUMS 10        // total number of pendulums in the simulation (must be >= 1)
 
 
 // ----- Performance parameters -----
 
-#define MULTITHREADING_THRESHOLD 1000	// number of pendulums above which CPU multithreading is used (exclusive)
+#define MULTITHREADING_THRESHOLD 100	// number of pendulums above which CPU multithreading is used (exclusive)
 // ----- Rendering parameters -----
 
 #define COLOR_DECAY 0.995			// decay for not having full blue or red pendulum colors 

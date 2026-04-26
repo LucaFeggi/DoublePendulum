@@ -15,7 +15,7 @@ typedef struct{
     PendulumRenderData *pen_data;
 }RenderData;    // all data from simulation for the render on GPU
 
-bool render_data_init(RenderData *sim_data, const double max_len);
+bool render_data_init(RenderData *sim_data, const Simulation *simulation);
 void render_data_quit(RenderData *sim_data);
 void render_data_pack(RenderData *sim_data, const Simulation *simulation);
 

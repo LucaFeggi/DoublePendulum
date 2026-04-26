@@ -13,8 +13,6 @@ typedef struct {
     int rod_line_count;
 #if TRAIL
 	Trail *trail;
-    RenderLine *trail_lines;
-    int *trail_line_counts;
 #endif
 }Renderer;
 

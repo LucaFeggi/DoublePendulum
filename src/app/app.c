@@ -26,7 +26,7 @@ bool app_init(App *app) {
 
 	if(!simulation_success) goto fail_simulation;
     if(!window_init(&app->window)) goto fail_window;
-	if(!render_data_init(&app->render_data, app->simulation.max_len)) goto fail_render_data;
+	if(!render_data_init(&app->render_data, &app->simulation)) goto fail_render_data;
 	if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
     window_show(&app->window);  // showing window only when everything is initialized
     return true;

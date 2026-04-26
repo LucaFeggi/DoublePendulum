@@ -7,11 +7,6 @@
 #include <stdlib.h>
 
 #define ROD_LINES_PER_PENDULUM 2
-#if TOTAL_TRAIL_SAMPLES > 1
-#define TRAIL_LINES_PER_PENDULUM (TOTAL_TRAIL_SAMPLES - 1)
-#else
-#define TRAIL_LINES_PER_PENDULUM 0
-#endif
 
 typedef struct {
     Renderer *renderer;
@@ -56,17 +51,6 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
 
 #if TRAIL
         trail_add(&renderer->trail[i], x1, y1, color[1], job->w, job->h);
-#if TOTAL_TRAIL_SAMPLES > 1
-        renderer->trail_line_counts[i] = trail_write_line_commands(
-            &renderer->trail[i],
-            job->w,
-            job->h,
-            &renderer->trail_lines[i * TRAIL_LINES_PER_PENDULUM],
-            TRAIL_LINES_PER_PENDULUM
-        );
-#else
-        renderer->trail_line_counts[i] = 0;
-#endif
 #endif
     }
 }
@@ -88,8 +72,6 @@ bool renderer_init(Renderer *renderer, Window *window) {
     renderer->rod_line_count = 0;
 #if TRAIL
     renderer->trail = NULL;
-    renderer->trail_lines = NULL;
-    renderer->trail_line_counts = NULL;
 #endif
 
     renderer->ptr = SDL_CreateRenderer(window->ptr, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -109,15 +91,7 @@ bool renderer_init(Renderer *renderer, Window *window) {
 
 #if TRAIL
     renderer->trail = (Trail *)malloc(TOTAL_PENDULUMS * sizeof(Trail));
-#if TOTAL_TRAIL_SAMPLES > 1
-    renderer->trail_lines = (RenderLine *)malloc((size_t)TOTAL_PENDULUMS * TRAIL_LINES_PER_PENDULUM * sizeof(RenderLine));
-#endif
-    renderer->trail_line_counts = (int *)malloc(TOTAL_PENDULUMS * sizeof(int));
-    if(renderer->trail == NULL || renderer->trail_line_counts == NULL
-#if TOTAL_TRAIL_SAMPLES > 1
-        || renderer->trail_lines == NULL
-#endif
-    ) {
+    if(renderer->trail == NULL) {
         SDL_Log("Could not allocate SDL trail buffers.");
         renderer_quit(renderer);
         return false;
@@ -125,7 +99,6 @@ bool renderer_init(Renderer *renderer, Window *window) {
 
     for(int i = 0; i < TOTAL_PENDULUMS; i++) {
         trail_init(&renderer->trail[i]); // Initialize each trail
-        renderer->trail_line_counts[i] = 0;
     }
 #endif
     return true;
@@ -138,11 +111,7 @@ void renderer_quit(Renderer *renderer) {
 
 #if TRAIL
     free(renderer->trail);
-    free(renderer->trail_lines);
-    free(renderer->trail_line_counts);
     renderer->trail = NULL;
-    renderer->trail_lines = NULL;
-    renderer->trail_line_counts = NULL;
 #endif
 
     if(renderer->ptr != NULL){
@@ -174,6 +143,11 @@ static void renderer_prepare(Renderer *renderer, RenderData *render_data, Thread
 }
 
 static void renderer_draw(Renderer *renderer){
+#if TRAIL
+    int w, h;
+    SDL_GetWindowSize(renderer->win_ptr, &w, &h);
+#endif
+
     SDL_SetRenderDrawColor(renderer->ptr, 0x0, 0x0, 0x0, 0x0);
     SDL_RenderClear(renderer->ptr);
 
@@ -182,13 +156,7 @@ static void renderer_draw(Renderer *renderer){
         renderer_draw_line(renderer->ptr, &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1]);
 
 #if TRAIL
-#if TOTAL_TRAIL_SAMPLES > 1
-        RenderLine *trail_lines = &renderer->trail_lines[i * TRAIL_LINES_PER_PENDULUM];
-        int trail_line_count = renderer->trail_line_counts[i];
-        for(int j = 0; j < trail_line_count; j++) {
-            renderer_draw_line(renderer->ptr, &trail_lines[j]);
-        }
-#endif
+        trail_render(&renderer->trail[i], w, h, renderer->ptr);
 #endif
     }
 

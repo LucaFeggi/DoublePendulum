@@ -1,71 +1,71 @@
 #include "trail.h"
+
 #include <stdint.h>
 
 void trail_init(Trail *t){
-    t->size = 0;
+    t->last_x = 0.0f;
+    t->last_y = 0.0f;
+    t->has_last = false;
+    t->segment_count = 0;
     t->head = 0;
 }
 
 void trail_add(Trail *t, int x, int y, SDL_Color color, int w, int h) {
-    int idx;
-    if(t->size < TOTAL_TRAIL_SAMPLES) {
-        idx = (t->head + t->size) % TOTAL_TRAIL_SAMPLES;
-        t->size++;
-    }
-    else {
-        idx = t->head;
-        t->head = (t->head + 1) % TOTAL_TRAIL_SAMPLES;
-    }
-    t->samples[2 * idx] = (float)x / w;
-    t->samples[2 * idx + 1] = (float)y / h;
-    t->colors[idx] = color;
-}
-
-int trail_write_line_commands(const Trail *t, int w, int h, RenderLine *lines, int capacity) {
-    if(!t || !lines || capacity <= 0 || t->size < 2) {
-        return 0;
+    if(!t || w <= 0 || h <= 0) {
+        return;
     }
 
-    int line_count = 0;
-    for(int i = 0; i < t->size - 1; i++) {
-        if(line_count >= capacity) {
-            break;
+    float nx = (float)x / (float)w;
+    float ny = (float)y / (float)h;
+
+#if TOTAL_TRAIL_SAMPLES > 1
+    if(t->has_last) {
+        int idx;
+        if(t->segment_count < TOTAL_TRAIL_SAMPLES - 1) {
+            idx = (t->head + t->segment_count) % (TOTAL_TRAIL_SAMPLES - 1);
+            t->segment_count++;
+        }
+        else {
+            idx = t->head;
+            t->head = (t->head + 1) % (TOTAL_TRAIL_SAMPLES - 1);
         }
 
-        int idx1 = (t->head + i) % TOTAL_TRAIL_SAMPLES;
-        int idx2 = (t->head + i + 1) % TOTAL_TRAIL_SAMPLES;
-
-        int x1 = t->samples[2 * idx1] * w;
-        int y1 = t->samples[2 * idx1 + 1] * h;
-        int x2 = t->samples[2 * idx2] * w;
-        int y2 = t->samples[2 * idx2 + 1] * h;
-
-        SDL_Color c1 = t->colors[idx1];
-        float alphaFactor = (float)(i + 1) / t->size;
-        uint8_t alpha1 = (uint8_t)(c1.a * alphaFactor);
-
-        lines[line_count].x0 = x1;
-        lines[line_count].y0 = y1;
-        lines[line_count].x1 = x2;
-        lines[line_count].y1 = y2;
-        lines[line_count].color.r = c1.r;
-        lines[line_count].color.g = c1.g;
-        lines[line_count].color.b = c1.b;
-        lines[line_count].color.a = alpha1;
-        line_count++;
+        t->segments[idx].x0 = t->last_x;
+        t->segments[idx].y0 = t->last_y;
+        t->segments[idx].x1 = nx;
+        t->segments[idx].y1 = ny;
+        t->segments[idx].color = color;
     }
+#else
+    (void)color;
+#endif
 
-    return line_count;
+    t->last_x = nx;
+    t->last_y = ny;
+    t->has_last = true;
 }
 
-void trail_render(Trail *t, int w, int h, SDL_Renderer *ptr){
+void trail_render(const Trail *t, int w, int h, SDL_Renderer *ptr){
 #if TOTAL_TRAIL_SAMPLES > 1
-    RenderLine lines[TOTAL_TRAIL_SAMPLES - 1];
-    int line_count = trail_write_line_commands(t, w, h, lines, TOTAL_TRAIL_SAMPLES - 1);
+    if(!t || !ptr || w <= 0 || h <= 0 || t->segment_count <= 0) {
+        return;
+    }
 
-    for(int i = 0; i < line_count; i++) {
-        SDL_SetRenderDrawColor(ptr, lines[i].color.r, lines[i].color.g, lines[i].color.b, lines[i].color.a);
-        SDL_RenderDrawLine(ptr, lines[i].x0, lines[i].y0, lines[i].x1, lines[i].y1);
+    for(int i = 0; i < t->segment_count; i++) {
+        int idx = (t->head + i) % (TOTAL_TRAIL_SAMPLES - 1);
+        const TrailSegment *seg = &t->segments[idx];
+
+        float alpha_factor = (float)(i + 1) / (float)t->segment_count;
+        uint8_t alpha = (uint8_t)(seg->color.a * alpha_factor);
+
+        SDL_SetRenderDrawColor(ptr, seg->color.r, seg->color.g, seg->color.b, alpha);
+        SDL_RenderDrawLine(
+            ptr,
+            (int)(seg->x0 * (float)w),
+            (int)(seg->y0 * (float)h),
+            (int)(seg->x1 * (float)w),
+            (int)(seg->y1 * (float)h)
+        );
     }
 #else
     (void)t;
