@@ -1,5 +1,5 @@
-#ifndef PENDULUM_H
-#define PENDULUM_H
+#ifndef SIMULATION_PENDULUM_H
+#define SIMULATION_PENDULUM_H
 
 #include "rod.h"
 
@@ -15,4 +15,4 @@ void pendulum_init_custom(
 void pendulum_init_default(Pendulum *pendulum, double angle);
 void pendulum_update(Pendulum *pendulum);
 
-#endif
+#endif // SIMULATION_PENDULUM_H

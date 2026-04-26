@@ -15,6 +15,7 @@ typedef struct ThreadPoolWorker {
 
 typedef struct ThreadPool {
     thrd_t *threads;
+
     ThreadPoolWorker *workers;
 
     mtx_t lock;

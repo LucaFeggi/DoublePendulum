@@ -1,5 +1,5 @@
-#ifndef SIMULATION_H
-#define SIMULATION_H
+#ifndef SIMULATION_SIMULATION_H
+#define SIMULATION_SIMULATION_H
 
 #include "pendulum.h"
 #include "../app/threadpool.h"
@@ -15,9 +15,10 @@ typedef struct{
 #endif
 }Simulation;
 
-bool simulation_init_custom(Simulation *simulation);
-bool simulation_init_default(Simulation *simulation);
+bool simulation_init_custom(Simulation *simulation, int worker_threads);
+bool simulation_init_default(Simulation *simulation, int worker_threads);
+ThreadPool *simulation_get_threadpool(Simulation *simulation);
 void simulation_update(Simulation *simulation);
 void simulation_quit(Simulation *simulation);
 
-#endif
+#endif // SIMULATION_SIMULATION_H

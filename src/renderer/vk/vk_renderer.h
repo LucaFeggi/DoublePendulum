@@ -1,5 +1,5 @@
-#ifndef VK_CONTEXT_H
-#define VK_CONTEXT_H
+#ifndef RENDERER_VK_VK_RENDERER_H
+#define RENDERER_VK_VK_RENDERER_H
 
 #include "../../app/window.h"
 
@@ -51,4 +51,4 @@ bool vk_renderer_init(VkRenderer *renderer, const Window *window);
 void vk_renderer_free(VkRenderer *renderer);
 void vk_renderer_render(VkRenderer *renderer, const Window *window);
 
-#endif
+#endif // RENDERER_VK_VK_RENDERER_H

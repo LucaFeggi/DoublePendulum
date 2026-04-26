@@ -1,8 +1,8 @@
-#ifndef INPUT_H
-#define INPUT_H
+#ifndef APP_INPUT_H
+#define APP_INPUT_H
 
 #include <stdbool.h>
 
 void input_poll(bool *quit);
 
-#endif
+#endif // APP_INPUT_H

@@ -1,5 +1,5 @@
-#ifndef ROD_H
-#define ROD_H
+#ifndef SIMULATION_ROD_H
+#define SIMULATION_ROD_H
 
 typedef struct{
 	double len;			// length
@@ -12,4 +12,4 @@ typedef struct{
 void rod_init_custom(Rod *rod, double angle, double ang_vel, double ang_acc, double len, double mass);
 void rod_init_default(Rod *rod, double angle);
 
-#endif
+#endif // SIMULATION_ROD_H

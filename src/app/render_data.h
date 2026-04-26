@@ -1,5 +1,5 @@
-#ifndef SIMULATION_RENDER_DATA_H
-#define SIMULATION_RENDER_DATA_H
+#ifndef APP_RENDER_DATA_H
+#define APP_RENDER_DATA_H
 
 #include "../simulation/simulation.h"
 
@@ -19,4 +19,4 @@ bool render_data_init(RenderData *sim_data, const double max_len);
 void render_data_quit(RenderData *sim_data);
 void render_data_pack(RenderData *sim_data, const Simulation *simulation);
 
-#endif
+#endif // APP_RENDER_DATA_H

@@ -2,10 +2,6 @@
 
 #include <stdio.h>
 
-#if RENDER_MODE
-    #include <SDL_vulkan.h>
-#endif
-
 bool window_init(Window *window){
 
     SDL_DisplayMode dm;
@@ -19,19 +15,11 @@ bool window_init(Window *window){
         w = (int)(dm.w * 0.667f);
         h = (int)(dm.h * 0.667f);
     }
-#if RENDER_MODE
     window->ptr = SDL_CreateWindow(
-        "Double pendulum | Simulation FPS: 0 | Renderer FPS: 0 |",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_HIDDEN | SDL_WINDOW_VULKAN
-    );
-#else
-    window->ptr = SDL_CreateWindow(
-        "Double pendulum | Simulation FPS: 0 | Renderer FPS: 0 |",
+        "Double pendulum | Simulation steps/s: 0 | Renderer FPS: 0 |",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_HIDDEN
     );
-#endif
     if(window->ptr == NULL) {
         SDL_Log("Could not create window: %s", SDL_GetError());
         return false;
@@ -67,11 +55,17 @@ bool window_is_minimized(const Window *window){
     return (SDL_GetWindowFlags(window->ptr) & SDL_WINDOW_MINIMIZED) != 0;
 }
 
-void window_update_title(Window *window, double delta_time, double fps_render, double fps_sim){
+void window_update_title(Window *window, double delta_time, double render_fps, double sim_steps_per_second){
     window->title_timer += delta_time;
     if(window->title_timer >= 1.0) {
-        char title[64];
-        snprintf(title, sizeof(title), "Double pendulum | Simulation FPS: %d | Renderer FPS: %d |", (int)(fps_sim + 0.5), (int)(fps_render + 0.5));
+        char title[80];
+        snprintf(
+            title,
+            sizeof(title),
+            "Double pendulum | Simulation steps/s: %d | Renderer FPS: %d |",
+            (int)(sim_steps_per_second + 0.5),
+            (int)(render_fps + 0.5)
+        );
         SDL_SetWindowTitle(window->ptr, title);
         window->title_timer = 0.0;
     }

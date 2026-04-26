@@ -1,5 +1,5 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef APP_WINDOW_H
+#define APP_WINDOW_H
 
 #include <stdbool.h>
 
@@ -14,6 +14,6 @@ bool window_init(Window *window);
 void window_quit(Window *window);
 void window_show(const Window *window);
 bool window_is_minimized(const Window *window);
-void window_update_title(Window *window, double delta_time, double fps_render, double fps_physics);
+void window_update_title(Window *window, double delta_time, double render_fps, double sim_steps_per_second);
 
-#endif
+#endif // APP_WINDOW_H

@@ -41,8 +41,8 @@ static double simulation_reduce_max_ang_vel(const Simulation *simulation) {
     return max_ang_vel;
 }
 
-static bool simulation_init_threadpool(Simulation *simulation, const char *caller_name) {
-    if(!threadpool_init(&simulation->threadpool, THREADPOOL_NUM_THREADS)) {
+static bool simulation_init_threadpool(Simulation *simulation, int worker_threads, const char *caller_name) {
+    if(!threadpool_init(&simulation->threadpool, worker_threads)) {
         SDL_Log("ERROR: %s: Failed to initialize thread pool.", caller_name);
         return false;
     }
@@ -59,7 +59,9 @@ static bool simulation_init_threadpool(Simulation *simulation, const char *calle
 }
 #endif
 
-bool simulation_init_custom(Simulation *simulation) {
+bool simulation_init_custom(Simulation *simulation, int worker_threads) {
+    (void)worker_threads;
+
     simulation->pendulum = (Pendulum *)malloc(TOTAL_PENDULUMS * sizeof(Pendulum));
     if(simulation->pendulum == NULL) {
         SDL_Log("ERROR: simulation_init_custom: Failed to allocate memory for pendulums.");
@@ -81,7 +83,7 @@ bool simulation_init_custom(Simulation *simulation) {
     }
 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-    if(!simulation_init_threadpool(simulation, "simulation_init_custom")) {
+    if(!simulation_init_threadpool(simulation, worker_threads, "simulation_init_custom")) {
         free(simulation->pendulum);
         return false;
     }
@@ -90,7 +92,9 @@ bool simulation_init_custom(Simulation *simulation) {
     return true;
 }
 
-bool simulation_init_default(Simulation *simulation) {
+bool simulation_init_default(Simulation *simulation, int worker_threads) {
+    (void)worker_threads;
+
     simulation->pendulum = (Pendulum *)malloc(TOTAL_PENDULUMS * sizeof(Pendulum));
     if(simulation->pendulum == NULL) {
         SDL_Log("ERROR: simulation_init_default: Failed to allocate memory for pendulums.");
@@ -107,13 +111,22 @@ bool simulation_init_default(Simulation *simulation) {
     }
 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-    if(!simulation_init_threadpool(simulation, "simulation_init_default")) {
+    if(!simulation_init_threadpool(simulation, worker_threads, "simulation_init_default")) {
         free(simulation->pendulum);
         return false;
     }
 #endif
 
     return true;
+}
+
+ThreadPool *simulation_get_threadpool(Simulation *simulation) {
+#if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
+    return &simulation->threadpool;
+#else
+    (void)simulation;
+    return NULL;
+#endif
 }
 
 void simulation_update(Simulation *simulation){

@@ -1,5 +1,5 @@
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef RENDERER_VK_VERTEX_H
+#define RENDERER_VK_VERTEX_H
 
 #include <vulkan/vulkan.h>
 
@@ -19,4 +19,4 @@ typedef struct Vertex{
 VkVertexInputBindingDescription vertex_get_binding_description();
 void vertex_get_attribute_descriptions(VkVertexInputAttributeDescription *descriptions, size_t count);
 
-#endif
+#endif // RENDERER_VK_VERTEX_H

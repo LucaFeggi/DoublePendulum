@@ -1,5 +1,5 @@
-#ifndef VK_UTILS_H
-#define VK_UTILS_H
+#ifndef RENDERER_VK_VK_UTILS_H
+#define RENDERER_VK_VK_UTILS_H
 
 #include "vk_renderer.h"
 
@@ -46,4 +46,4 @@ uint8_t *readFile(const char *filename, size_t *pCodeSize);
 VkShaderModule createShaderModule(VkDevice device, const uint8_t *code, size_t codeSize);
 uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-#endif
+#endif // RENDERER_VK_VK_UTILS_H

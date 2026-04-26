@@ -4,6 +4,12 @@
 #include "input.h"
 
 #include <SDL.h>
+#include <SDL_cpuinfo.h>
+
+static int app_get_worker_threads(void) {
+	int cpu_count = SDL_GetCPUCount();
+	return cpu_count > 1 ? cpu_count - 1 : 1;
+}
 
 bool app_init(App *app) {
     if(SDL_Init(SDL_INIT_VIDEO) != 0){
@@ -13,21 +19,15 @@ bool app_init(App *app) {
 
     fps_init(&app->fps);
 
-    bool simulation_success;
-#if PENDULUM_INIT_MODE
-	simulation_success = simulation_init_custom(&app->simulation);
-#else
-	simulation_success = simulation_init_default(&app->simulation);
-#endif
+	int worker_threads = app_get_worker_threads();
+	bool simulation_success = PENDULUM_INIT_MODE
+		? simulation_init_custom(&app->simulation, worker_threads)
+		: simulation_init_default(&app->simulation, worker_threads);
 
-    if(!simulation_success) goto fail_simulation;
+	if(!simulation_success) goto fail_simulation;
     if(!window_init(&app->window)) goto fail_window;
 	if(!render_data_init(&app->render_data, app->simulation.max_len)) goto fail_render_data;
-#if RENDER_MODE
-//    if(!vk_renderer_init(&app->renderer, &app->window)) goto fail_renderer;
-#else
-	if(!renderer_sdl_init(&app->renderer_sdl, &app->window)) goto fail_renderer;
-#endif
+	if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
     window_show(&app->window);  // showing window only when everything is initialized
     return true;
 
@@ -57,24 +57,15 @@ fail_simulation:
 			app->fps.accumulator -= DT;
 		}	
 		if(!window_is_minimized(&app->window)){		// rendering only if window is not minimized
-			window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_fps);
+			window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_steps_per_second);
 			render_data_pack(&app->render_data, &app->simulation);
-#if RENDER_MODE
-
-#else
-			renderer_sdl_render(&app->renderer_sdl, &app->render_data);
-#endif
-		//	vk_renderer_render(&app->renderer, &app->window);
+			renderer_render(&app->renderer, &app->render_data, simulation_get_threadpool(&app->simulation));
 		}
 	}
 }
 
 void app_quit(App *app){
-#if RENDER_MODE
-	//	vk_renderer_free(&app->renderer);
-#else
-	renderer_sdl_quit(&app->renderer_sdl);
-#endif
+	renderer_quit(&app->renderer);
 	render_data_quit(&app->render_data);
 	window_quit(&app->window);
 	simulation_quit(&app->simulation);

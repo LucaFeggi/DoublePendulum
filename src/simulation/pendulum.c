@@ -1,6 +1,6 @@
 #include "pendulum.h"
 
-#include "rk4.h"
+#include "integrator.h"
 
 void pendulum_init_custom(
     Pendulum *pendulum,
@@ -17,7 +17,5 @@ void pendulum_init_default(Pendulum *pendulum, double angle){
 }
 
 void pendulum_update(Pendulum *pendulum){
-    rk4_pendulum_update(pendulum);
+    integrator_pendulum_update(pendulum);
 }
-
-// definire qui le funzioni per updateare il pendulum, e poi da math/rk4.h chiamare rk4_update(pendulum_formulas)
