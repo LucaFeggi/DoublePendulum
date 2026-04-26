@@ -3,6 +3,62 @@
 #include "../config.h"
 #include "SDL.h"
 
+#include <math.h>
+#include <stdlib.h>
+
+#if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
+typedef struct {
+    Pendulum *pendulums;
+    double *thread_max_ang_vel;
+} SimulationUpdateJob;
+
+static void simulation_update_job(void *context, int start_index, int end_index, int worker_id) {
+    SimulationUpdateJob *job = (SimulationUpdateJob *)context;
+    double local_max_ang_vel = 0.0;
+
+    for(int i = start_index; i < end_index; ++i) {
+        pendulum_update(&job->pendulums[i]);
+
+        double v0 = fabs(job->pendulums[i].rod[0].ang_vel);
+        double v1 = fabs(job->pendulums[i].rod[1].ang_vel);
+        if(v0 > local_max_ang_vel) local_max_ang_vel = v0;
+        if(v1 > local_max_ang_vel) local_max_ang_vel = v1;
+    }
+
+    job->thread_max_ang_vel[worker_id] = local_max_ang_vel;
+}
+
+static double simulation_reduce_max_ang_vel(const Simulation *simulation) {
+    double max_ang_vel = simulation->max_ang_vel;
+    int num_threads = threadpool_get_num_threads(&simulation->threadpool);
+
+    for(int i = 0; i < num_threads; ++i) {
+        if(simulation->thread_max_ang_vel[i] > max_ang_vel) {
+            max_ang_vel = simulation->thread_max_ang_vel[i];
+        }
+    }
+
+    return max_ang_vel;
+}
+
+static bool simulation_init_threadpool(Simulation *simulation, const char *caller_name) {
+    if(!threadpool_init(&simulation->threadpool, THREADPOOL_NUM_THREADS)) {
+        SDL_Log("ERROR: %s: Failed to initialize thread pool.", caller_name);
+        return false;
+    }
+
+    int num_threads = threadpool_get_num_threads(&simulation->threadpool);
+    simulation->thread_max_ang_vel = (double *)calloc((size_t)num_threads, sizeof(double));
+    if(!simulation->thread_max_ang_vel) {
+        SDL_Log("ERROR: %s: Failed to allocate thread-local angular velocity buffer.", caller_name);
+        threadpool_quit(&simulation->threadpool);
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 bool simulation_init_custom(Simulation *simulation) {
     simulation->pendulum = (Pendulum *)malloc(TOTAL_PENDULUMS * sizeof(Pendulum));
     if(simulation->pendulum == NULL) {
@@ -25,8 +81,7 @@ bool simulation_init_custom(Simulation *simulation) {
     }
 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-    if(!threadpool_init(&simulation->threadpool)) {
-        SDL_Log("ERROR: simulation_init_custom: Failed to initialize thread pool.");
+    if(!simulation_init_threadpool(simulation, "simulation_init_custom")) {
         free(simulation->pendulum);
         return false;
     }
@@ -52,8 +107,7 @@ bool simulation_init_default(Simulation *simulation) {
     }
 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-    if(!threadpool_init(&simulation->threadpool)) {
-        SDL_Log("ERROR: simulation_init_default: Failed to initialize thread pool.");
+    if(!simulation_init_threadpool(simulation, "simulation_init_default")) {
         free(simulation->pendulum);
         return false;
     }
@@ -67,8 +121,13 @@ void simulation_update(Simulation *simulation){
     // but i understand this is simple here
 	simulation->max_ang_vel *= COLOR_DECAY;		// Decaying before updating so old peaks fade 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-	threadpool_run(&simulation->threadpool, simulation->pendulum);	// pendulum_update in multithread
-	simulation->max_ang_vel = threadpool_get_max_ang_vel(&simulation->threadpool);
+    SimulationUpdateJob job = {
+        .pendulums = simulation->pendulum,
+        .thread_max_ang_vel = simulation->thread_max_ang_vel
+    };
+
+	threadpool_parallel_for(&simulation->threadpool, TOTAL_PENDULUMS, simulation_update_job, &job);
+	simulation->max_ang_vel = simulation_reduce_max_ang_vel(simulation);
 #else
 	for(int i = 0; i < TOTAL_PENDULUMS; i++) {
 		pendulum_update(&simulation->pendulum[i]);  // pass pointer to current element
@@ -83,6 +142,7 @@ void simulation_update(Simulation *simulation){
 void simulation_quit(Simulation *simulation){
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
 	threadpool_quit(&simulation->threadpool);
+    free(simulation->thread_max_ang_vel);
 #endif
 	free(simulation->pendulum);
 }

@@ -40,6 +40,7 @@
 // ----- Performance parameters -----
 
 #define MULTITHREADING_THRESHOLD 1000	// number of pendulums above which CPU multithreading is used (exclusive)
+#define THREADPOOL_NUM_THREADS 4		// C11 has no standard API for querying the CPU core count
 
 
 // ----- Rendering parameters -----

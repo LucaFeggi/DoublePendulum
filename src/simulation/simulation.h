@@ -2,7 +2,7 @@
 #define SIMULATION_H
 
 #include "pendulum.h"
-#include "threadpool.h"
+#include "../app/threadpool.h"
 #include "../config.h"
 
 typedef struct{
@@ -11,6 +11,7 @@ typedef struct{
 	double max_ang_vel;			// max angular velocity (always updates) ever register in the current simulation. Used for coloring.
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
 	ThreadPool threadpool;		// CPU mulithtreading turns on if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
+	double *thread_max_ang_vel;
 #endif
 }Simulation;
 

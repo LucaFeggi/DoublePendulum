@@ -30,10 +30,6 @@ void renderer_sdl_quit(RendererSDL *renderer_sdl){
 }
 
 void renderer_sdl_render(RendererSDL *renderer_sdl, RenderData *render_data){
-//#if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-  //  threadpool_run(&simulation->threadpool, simulation->pendulum);	// pendulum_update in multithread
-    //simulation->max_ang_vel = threadpool_get_max_ang_vel(&simulation->threadpool);
-//#else
     int w, h;
     SDL_GetWindowSize(renderer_sdl->win_ptr, &w, &h);
     int center_x = w / 2;
@@ -73,5 +69,4 @@ void renderer_sdl_render(RendererSDL *renderer_sdl, RenderData *render_data){
 
     }
     SDL_RenderPresent(renderer_sdl->ptr);
-//#endif
 }
