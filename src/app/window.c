@@ -26,7 +26,7 @@ bool window_init(Window *window){
     }
     SDL_SetWindowMinimumSize(window->ptr, w / 5, h / 5);
 
-    SDL_Surface *icon = SDL_LoadBMP("../../assets/icon/icon.bmp");
+    SDL_Surface *icon = SDL_LoadBMP("assets/icon/icon.bmp");
     if(icon != NULL) {
         SDL_SetWindowIcon(window->ptr, icon);
         SDL_FreeSurface(icon);

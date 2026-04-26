@@ -143,3 +143,10 @@ set_target_properties(DoublePendulum PROPERTIES
     COMPILE_PDB_OUTPUT_DIRECTORY "${DOUBLE_PENDULUM_OUTPUT_DIR}"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+add_custom_command(TARGET DoublePendulum POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:DoublePendulum>/assets"
+    COMMENT "Copying runtime assets"
+)

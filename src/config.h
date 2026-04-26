@@ -34,7 +34,7 @@
 #define DT 1.0/1000.0		// dt for physics update rate (1.0/1000.0 -> simulation updates at 1000Hz)
 #define SPEED_FACTOR 3.0	// speed factor for faster pendulum movement
 
-#define TOTAL_PENDULUMS 1500        // total number of pendulums in the simulation (must be >= 1)
+#define TOTAL_PENDULUMS 5        // total number of pendulums in the simulation (must be >= 1)
 
 
 // ----- Performance parameters -----
@@ -46,7 +46,7 @@
 
 #define PENDULUM_GLOWING 0			// 0 -> glowing off		1 -> glowing on
 
-#define TRAIL 0						// 1 -> trail on		0 -> trail off
+#define TRAIL 1						// 1 -> trail on		0 -> trail off
 #define TOTAL_TRAIL_SAMPLES 150		// trail_samples = trail_duration_in_seconds * renderer_fps
 #define TRAIL_GLOWING 0				// 0 -> glowing off		1 -> glowing on
 
