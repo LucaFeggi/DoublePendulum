@@ -23,17 +23,23 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
     RenderData *render_data = job->render_data;
 
     for(int i = start_index; i < end_index; i++) {
-        double len0 = render_data->pen_data[i].len[0] / render_data->max_len * job->max_rend_len;
-        double len1 = render_data->pen_data[i].len[1] / render_data->max_len * job->max_rend_len;
+        float len0 = render_data->pen_data[i].len[0] / render_data->max_len * job->max_rend_len;
+        float len1 = render_data->pen_data[i].len[1] / render_data->max_len * job->max_rend_len;
+        PendulumTrig trig = {
+            .sin0 = sinf(render_data->pen_data[i].angle[0]),
+            .cos0 = cosf(render_data->pen_data[i].angle[0]),
+            .sin1 = sinf(render_data->pen_data[i].angle[1]),
+            .cos1 = cosf(render_data->pen_data[i].angle[1])
+        };
 
-        int x0 = job->center_x + (int)(len0 * sin(render_data->pen_data[i].angle[0]));
-        int y0 = job->center_y + (int)(len0 * cos(render_data->pen_data[i].angle[0]));
+        int x0 = job->center_x + (int)(len0 * trig.sin0);
+        int y0 = job->center_y + (int)(len0 * trig.cos0);
 
-        int x1 = x0 + (int)(len1 * sin(render_data->pen_data[i].angle[1]));
-        int y1 = y0 + (int)(len1 * cos(render_data->pen_data[i].angle[1]));
+        int x1 = x0 + (int)(len1 * trig.sin1);
+        int y1 = y0 + (int)(len1 * trig.cos1);
 
         SDL_Color color[2];
-        color_get_double_pendulum(&render_data->pen_data[i], render_data->max_ang_vel, color);
+        color_get_double_pendulum(&render_data->pen_data[i], render_data->max_ang_vel, &trig, color);
 
         RenderLine *rod0 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
         rod0->x0 = job->center_x;
@@ -69,7 +75,6 @@ bool renderer_init(Renderer *renderer, Window *window) {
     renderer->win_ptr = window->ptr;
     renderer->ptr = NULL;
     renderer->rod_lines = NULL;
-    renderer->rod_line_count = 0;
 #if TRAIL
     renderer->trail = NULL;
 #endif
@@ -81,8 +86,7 @@ bool renderer_init(Renderer *renderer, Window *window) {
     }
     SDL_SetRenderDrawBlendMode(renderer->ptr, SDL_BLENDMODE_BLEND);
 
-    renderer->rod_line_count = TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM;
-    renderer->rod_lines = (RenderLine *)malloc((size_t)renderer->rod_line_count * sizeof(RenderLine));
+    renderer->rod_lines = (RenderLine *)malloc((size_t)TOTAL_PENDULUMS * 2 * sizeof(RenderLine));
     if(renderer->rod_lines == NULL) {
         SDL_Log("Could not allocate SDL rod line commands.");
         renderer_quit(renderer);
@@ -107,7 +111,6 @@ bool renderer_init(Renderer *renderer, Window *window) {
 void renderer_quit(Renderer *renderer) {
     free(renderer->rod_lines);
     renderer->rod_lines = NULL;
-    renderer->rod_line_count = 0;
 
 #if TRAIL
     free(renderer->trail);

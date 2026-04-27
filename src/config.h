@@ -8,7 +8,6 @@
 
 // the default rods are both equally initialized, so just one group of defines
 #define DEFAULT_ANG_VEL 0.0
-#define DEFAULT_ANG_ACC 0.0
 #define DEFAULT_LEN 100.0
 #define DEFAULT_MASS 10.0
 #define DEFAULT_ANGLE 2.4
@@ -16,14 +15,12 @@
 
 // the 2 custom rods can be different to each other, so 2 groups of defines
 #define CUSTOM_ANG_VEL_ROD1 0.0
-#define CUSTOM_ANG_ACC_ROD1 0.0
 #define CUSTOM_LEN_ROD1 100.0
 #define CUSTOM_MASS_ROD1 10.0
 #define CUSTOM_ANGLE_ROD1 1.28
 #define CUSTOM_ANGLE_ADDER_ROD1 0.001
 
 #define CUSTOM_ANG_VEL_ROD2 0.0
-#define CUSTOM_ANG_ACC_ROD2 0.0
 #define CUSTOM_LEN_ROD2 50.0
 #define CUSTOM_MASS_ROD2 5.0
 #define CUSTOM_ANGLE_ROD2 2.28

@@ -32,16 +32,25 @@ void pendulum_compute_acceleration(const Pendulum *pendulum, const PendulumState
     double omega1 = state->ang_vel[1];
 
     double delta = theta0 - theta1;
-    double denominator = 2 * m0 + m1 - m1 * cos(2 * delta);
+    double sin_delta = sin(delta);
+    double cos_delta = cos(delta);
+    double cos_2_delta = 2.0 * cos_delta * cos_delta - 1.0;
 
-    double numerator0 = -G * (2 * m0 + m1) * sin(theta0)
-        - m1 * G * sin(theta0 - 2 * theta1)
-        - 2 * sin(delta) * m1 * (omega1 * omega1 * l1 + omega0 * omega0 * l0 * cos(delta));
+    double omega0_sq = omega0 * omega0;
+    double omega1_sq = omega1 * omega1;
+    double mass_sum = m0 + m1;
+    double two_m0_plus_m1 = 2.0 * m0 + m1;
 
-    double numerator1 = 2 * sin(delta)
-        * (omega0 * omega0 * l0 * (m0 + m1)
-        + G * (m0 + m1) * cos(theta0)
-        + omega1 * omega1 * l1 * m1 * cos(delta));
+    double denominator = two_m0_plus_m1 - m1 * cos_2_delta;
+
+    double numerator0 = -G * two_m0_plus_m1 * sin(theta0)
+        - m1 * G * sin(theta0 - 2.0 * theta1)
+        - 2.0 * sin_delta * m1 * (omega1_sq * l1 + omega0_sq * l0 * cos_delta);
+
+    double numerator1 = 2.0 * sin_delta
+        * (omega0_sq * l0 * mass_sum
+        + G * mass_sum * cos(theta0)
+        + omega1_sq * l1 * m1 * cos_delta);
 
     ang_acc[0] = numerator0 / (l0 * denominator);
     ang_acc[1] = numerator1 / (l1 * denominator);

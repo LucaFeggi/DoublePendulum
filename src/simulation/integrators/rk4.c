@@ -20,6 +20,7 @@ static PendulumDerivative rk4_evaluate(
 
 void integrator_pendulum_update(Pendulum *pendulum){
     double dt = DT * SPEED_FACTOR;
+    double sixth_dt = dt / 6.0;
     PendulumState state = pendulum_get_state(pendulum);
 
     PendulumDerivative k1 = rk4_evaluate(pendulum, state, 0.0, (PendulumDerivative){ 0 });
@@ -27,15 +28,10 @@ void integrator_pendulum_update(Pendulum *pendulum){
     PendulumDerivative k3 = rk4_evaluate(pendulum, state, dt * 0.5, k2);
     PendulumDerivative k4 = rk4_evaluate(pendulum, state, dt, k3);
 
-    state.angle[0] += dt / 6.0 * (k1.d_angle[0] + 2.0 * k2.d_angle[0] + 2.0 * k3.d_angle[0] + k4.d_angle[0]);
-    state.angle[1] += dt / 6.0 * (k1.d_angle[1] + 2.0 * k2.d_angle[1] + 2.0 * k3.d_angle[1] + k4.d_angle[1]);
-    state.ang_vel[0] += dt / 6.0 * (k1.d_ang_vel[0] + 2.0 * k2.d_ang_vel[0] + 2.0 * k3.d_ang_vel[0] + k4.d_ang_vel[0]);
-    state.ang_vel[1] += dt / 6.0 * (k1.d_ang_vel[1] + 2.0 * k2.d_ang_vel[1] + 2.0 * k3.d_ang_vel[1] + k4.d_ang_vel[1]);
+    state.angle[0] += sixth_dt * (k1.d_angle[0] + 2.0 * k2.d_angle[0] + 2.0 * k3.d_angle[0] + k4.d_angle[0]);
+    state.angle[1] += sixth_dt * (k1.d_angle[1] + 2.0 * k2.d_angle[1] + 2.0 * k3.d_angle[1] + k4.d_angle[1]);
+    state.ang_vel[0] += sixth_dt * (k1.d_ang_vel[0] + 2.0 * k2.d_ang_vel[0] + 2.0 * k3.d_ang_vel[0] + k4.d_ang_vel[0]);
+    state.ang_vel[1] += sixth_dt * (k1.d_ang_vel[1] + 2.0 * k2.d_ang_vel[1] + 2.0 * k3.d_ang_vel[1] + k4.d_ang_vel[1]);
 
     pendulum_set_state(pendulum, &state);
-
-    double ang_acc[2];
-    pendulum_compute_acceleration(pendulum, &state, ang_acc);
-    pendulum->rod[0].ang_acc = ang_acc[0];
-    pendulum->rod[1].ang_acc = ang_acc[1];
 }

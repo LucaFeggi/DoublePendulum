@@ -54,7 +54,12 @@ static SDL_Color color_map(float t) {
     return color_interpolate(spectrum[idx], spectrum[idx + 1], frac);
 }
 
-void color_get_double_pendulum(const PendulumRenderData *pen, double max_ang_vel, SDL_Color color[2]) {
+void color_get_double_pendulum(
+    const PendulumRenderData *pen,
+    float max_ang_vel,
+    const PendulumTrig *trig,
+    SDL_Color color[2]
+) {
     if(color == NULL) {
         return;
     }
@@ -65,6 +70,15 @@ void color_get_double_pendulum(const PendulumRenderData *pen, double max_ang_vel
         return;
     }
 
+    PendulumTrig local_trig;
+    if(trig == NULL) {
+        local_trig.sin0 = sinf(pen->angle[0]);
+        local_trig.cos0 = cosf(pen->angle[0]);
+        local_trig.sin1 = sinf(pen->angle[1]);
+        local_trig.cos1 = cosf(pen->angle[1]);
+        trig = &local_trig;
+    }
+
     float len0 = pen->len[0];
     float len1_com = pen->len[1] * 0.5f;
     float omega0 = pen->ang_vel[0];
@@ -72,17 +86,17 @@ void color_get_double_pendulum(const PendulumRenderData *pen, double max_ang_vel
 
     float v1 = fabsf(omega0) * fabsf(len0 * 0.5f);
 
-    float vx_pivot2 = omega0 * len0 * cosf(pen->angle[0]);
-    float vy_pivot2 = -omega0 * len0 * sinf(pen->angle[0]);
+    float vx_pivot2 = omega0 * len0 * trig->cos0;
+    float vy_pivot2 = -omega0 * len0 * trig->sin0;
 
-    float vx_com2 = omega1 * len1_com * cosf(pen->angle[1]);
-    float vy_com2 = -omega1 * len1_com * sinf(pen->angle[1]);
+    float vx_com2 = omega1 * len1_com * trig->cos1;
+    float vy_com2 = -omega1 * len1_com * trig->sin1;
 
     float vx_total = vx_pivot2 + vx_com2;
     float vy_total = vy_pivot2 + vy_com2;
     float v2 = sqrtf(vx_total * vx_total + vy_total * vy_total);
 
-    float max_omega = fabsf((float)max_ang_vel);
+    float max_omega = fabsf(max_ang_vel);
     float v1_max = max_omega * fabsf(len0 * 0.5f);
     float v2_max = max_omega * (fabsf(len0) + fabsf(len1_com));
 

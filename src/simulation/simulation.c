@@ -29,7 +29,7 @@ static void simulation_update_job(void *context, int start_index, int end_index,
 }
 
 static double simulation_reduce_max_ang_vel(const Simulation *simulation) {
-    double max_ang_vel = simulation->max_ang_vel;
+    double max_ang_vel = 0.0;
     int num_threads = threadpool_get_num_threads(&simulation->threadpool);
 
     for(int i = 0; i < num_threads; ++i) {
@@ -75,8 +75,8 @@ bool simulation_init_custom(Simulation *simulation, int worker_threads) {
     for(int i = 0; i < TOTAL_PENDULUMS; i++){
         pendulum_init_custom(
             &simulation->pendulum[i],
-            CUSTOM_ANGLE_ROD1 + angle_adder_rod1, CUSTOM_ANG_VEL_ROD1, CUSTOM_ANG_ACC_ROD1, CUSTOM_LEN_ROD1, CUSTOM_MASS_ROD1,
-            CUSTOM_ANGLE_ROD2 + angle_adder_rod2, CUSTOM_ANG_VEL_ROD2, CUSTOM_ANG_ACC_ROD2, CUSTOM_LEN_ROD2, CUSTOM_MASS_ROD2
+            CUSTOM_ANGLE_ROD1 + angle_adder_rod1, CUSTOM_ANG_VEL_ROD1, CUSTOM_LEN_ROD1, CUSTOM_MASS_ROD1,
+            CUSTOM_ANGLE_ROD2 + angle_adder_rod2, CUSTOM_ANG_VEL_ROD2, CUSTOM_LEN_ROD2, CUSTOM_MASS_ROD2
         );
         angle_adder_rod1 += CUSTOM_ANGLE_ADDER_ROD1;
         angle_adder_rod2 += CUSTOM_ANGLE_ADDER_ROD2;
@@ -130,9 +130,6 @@ ThreadPool *simulation_get_threadpool(Simulation *simulation) {
 }
 
 void simulation_update(Simulation *simulation){
-    // COLOR_DECAY should be in renderer somewhere. Because is rendering stuff, not simulation
-    // but i understand this is simple here
-	simulation->max_ang_vel *= COLOR_DECAY;		// Decaying before updating so old peaks fade 
 #if TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
     SimulationUpdateJob job = {
         .pendulums = simulation->pendulum,
@@ -142,13 +139,15 @@ void simulation_update(Simulation *simulation){
 	threadpool_parallel_for(&simulation->threadpool, TOTAL_PENDULUMS, simulation_update_job, &job);
 	simulation->max_ang_vel = simulation_reduce_max_ang_vel(simulation);
 #else
+    double max_ang_vel = 0.0;
 	for(int i = 0; i < TOTAL_PENDULUMS; i++) {
 		pendulum_update(&simulation->pendulum[i]);  // pass pointer to current element
 		double v0 = fabs(simulation->pendulum[i].rod[0].ang_vel);
 		double v1 = fabs(simulation->pendulum[i].rod[1].ang_vel);
-		if(v0 > simulation->max_ang_vel) simulation->max_ang_vel = v0;
-		if(v1 > simulation->max_ang_vel) simulation->max_ang_vel = v1;
+		if(v0 > max_ang_vel) max_ang_vel = v0;
+		if(v1 > max_ang_vel) max_ang_vel = v1;
 	}
+    simulation->max_ang_vel = max_ang_vel;
 #endif
 }
 

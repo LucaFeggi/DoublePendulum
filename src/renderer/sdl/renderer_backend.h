@@ -10,7 +10,6 @@ typedef struct {
 	SDL_Window *win_ptr;	//owned by Window class
 	SDL_Renderer *ptr;
     RenderLine *rod_lines;
-    int rod_line_count;
 #if TRAIL
 	Trail *trail;
 #endif
