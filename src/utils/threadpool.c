@@ -1,10 +1,25 @@
 #include "threadpool.h"
 
+#include "../config/config.h"
+
 #include <stdlib.h>
 
-static void threadpool_get_chunk(int count, int num_threads, int worker_id, int *start_index, int *end_index) {
-    int base_chunk = count / num_threads;
-    int remainder = count % num_threads;
+static int threadpool_choose_active_jobs(int count, int num_threads) {
+    int active_jobs = (count + THREADPOOL_MIN_ITEMS_PER_JOB - 1) / THREADPOOL_MIN_ITEMS_PER_JOB;
+
+    if(active_jobs < 1) {
+        active_jobs = 1;
+    }
+    if(active_jobs > num_threads) {
+        active_jobs = num_threads;
+    }
+
+    return active_jobs;
+}
+
+static void threadpool_get_chunk(int count, int active_jobs, int worker_id, int *start_index, int *end_index) {
+    int base_chunk = count / active_jobs;
+    int remainder = count % active_jobs;
     int extra_before = worker_id < remainder ? worker_id : remainder;
 
     *start_index = worker_id * base_chunk + extra_before;
@@ -29,15 +44,21 @@ static int threadpool_worker_thread(void *param) {
         ThreadPoolJobFn job_fn = threadpool->job_fn;
         void *job_context = threadpool->job_context;
         int job_count = threadpool->job_count;
-        int num_threads = threadpool->num_threads;
+        int active_jobs = threadpool->active_jobs;
         int worker_id = worker->worker_id;
 
         worker->last_generation = threadpool->generation;
+
+        if(worker_id >= active_jobs) {
+            mtx_unlock(&threadpool->lock);
+            continue;
+        }
+
         mtx_unlock(&threadpool->lock);
 
         int start_index;
         int end_index;
-        threadpool_get_chunk(job_count, num_threads, worker_id, &start_index, &end_index);
+        threadpool_get_chunk(job_count, active_jobs, worker_id, &start_index, &end_index);
         job_fn(job_context, start_index, end_index, worker_id);
 
         mtx_lock(&threadpool->lock);
@@ -56,6 +77,8 @@ static void threadpool_cleanup(ThreadPool *threadpool) {
     threadpool->threads = NULL;
     threadpool->workers = NULL;
     threadpool->num_threads = 0;
+    threadpool->active_jobs = 0;
+    threadpool->initialized = false;
 }
 
 bool threadpool_init(ThreadPool *threadpool, int num_threads) {
@@ -64,10 +87,12 @@ bool threadpool_init(ThreadPool *threadpool, int num_threads) {
 
     threadpool->threads = NULL;
     threadpool->workers = NULL;
+    threadpool->initialized = false;
     threadpool->shutdown = false;
     threadpool->generation = 0;
     threadpool->jobs_remaining = 0;
     threadpool->num_threads = num_threads;
+    threadpool->active_jobs = 0;
     threadpool->job_fn = NULL;
     threadpool->job_context = NULL;
     threadpool->job_count = 0;
@@ -123,22 +148,26 @@ bool threadpool_init(ThreadPool *threadpool, int num_threads) {
         created_threads++;
     }
 
+    threadpool->initialized = true;
     return true;
 }
 
-void threadpool_parallel_for(ThreadPool *threadpool, int count, ThreadPoolJobFn job_fn, void *job_context) {
-    if(!threadpool || !job_fn || count <= 0) return;
+int threadpool_parallel_for(ThreadPool *threadpool, int count, ThreadPoolJobFn job_fn, void *job_context) {
+    if(!threadpool || !threadpool->initialized || !job_fn || count <= 0) return 0;
 
     mtx_lock(&threadpool->lock);
     if(threadpool->shutdown || threadpool->num_threads <= 0) {
         mtx_unlock(&threadpool->lock);
-        return;
+        return 0;
     }
+
+    int active_jobs = threadpool_choose_active_jobs(count, threadpool->num_threads);
 
     threadpool->job_fn = job_fn;
     threadpool->job_context = job_context;
     threadpool->job_count = count;
-    threadpool->jobs_remaining = threadpool->num_threads;
+    threadpool->active_jobs = active_jobs;
+    threadpool->jobs_remaining = active_jobs;
     threadpool->generation++;
 
     cnd_broadcast(&threadpool->cv_work);
@@ -150,15 +179,17 @@ void threadpool_parallel_for(ThreadPool *threadpool, int count, ThreadPoolJobFn 
     threadpool->job_context = NULL;
     threadpool->job_count = 0;
     mtx_unlock(&threadpool->lock);
+
+    return active_jobs;
 }
 
 int threadpool_get_num_threads(const ThreadPool *threadpool) {
-    if(!threadpool) return 0;
+    if(!threadpool || !threadpool->initialized) return 0;
     return threadpool->num_threads;
 }
 
 bool threadpool_quit(ThreadPool *threadpool) {
-    if(!threadpool) return false;
+    if(!threadpool || !threadpool->initialized) return false;
 
     mtx_lock(&threadpool->lock);
     threadpool->shutdown = true;

@@ -19,7 +19,6 @@ void fps_update(Fps *fps) {
     fps->delta_time = (now - fps->last_time) / fps->freq;
     fps->last_time = now;
 
-    fps->accumulator += fps->delta_time;
     fps->frames++;
     fps->fps_timer += fps->delta_time;
 

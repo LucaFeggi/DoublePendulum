@@ -1,39 +1,38 @@
 #include "render_data.h"
 
-#include "../config.h"
+#include "../config/config.h"
 
 #include <stdlib.h>
 
 bool render_data_init(RenderData *rd, const Simulation *sim) {
-    rd->max_len = (float)sim->max_len;
+    rd->max_len = (float)simulation_get_max_len(sim);
     rd->max_ang_vel = 0.0f;
-    rd->pen_data = malloc(TOTAL_PENDULUMS * sizeof(PendulumRenderData));
-    if(!rd->pen_data){
+    rd->pen_data = (PendulumRenderData *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumRenderData));
+    if(!rd->pen_data) {
         return false;
     }
-    for(int i = 0; i < TOTAL_PENDULUMS; ++i) {
-        rd->pen_data[i].len[0] = (float)sim->pendulum[i].rod[0].len;
-        rd->pen_data[i].len[1] = (float)sim->pendulum[i].rod[1].len;
-    }
+
+    simulation_fill_render_samples(sim, rd->pen_data, TOTAL_PENDULUMS);
     return true;
 }
 
+void render_data_quit(RenderData *rd) {
+    if(!rd) {
+        return;
+    }
 
-void render_data_quit(RenderData *sim_data){
-    free(sim_data->pen_data);
+    free(rd->pen_data);
+    rd->pen_data = NULL;
+    rd->max_len = 0.0f;
+    rd->max_ang_vel = 0.0f;
 }
 
 void render_data_pack(RenderData *rd, const Simulation *sim) {
-    float current_max_ang_vel = (float)sim->max_ang_vel;
+    float current_max_ang_vel = (float)simulation_get_max_ang_vel(sim);
     float decayed_max_ang_vel = rd->max_ang_vel * (float)COLOR_DECAY;
     rd->max_ang_vel = current_max_ang_vel > decayed_max_ang_vel
         ? current_max_ang_vel
         : decayed_max_ang_vel;
 
-    for(int i = 0; i < TOTAL_PENDULUMS; ++i) {
-        rd->pen_data[i].angle[0] = (float)sim->pendulum[i].rod[0].angle;
-        rd->pen_data[i].ang_vel[0] = (float)sim->pendulum[i].rod[0].ang_vel;
-        rd->pen_data[i].angle[1] = (float)sim->pendulum[i].rod[1].angle;
-        rd->pen_data[i].ang_vel[1] = (float)sim->pendulum[i].rod[1].ang_vel;
-    }
+    simulation_fill_render_samples(sim, rd->pen_data, TOTAL_PENDULUMS);
 }

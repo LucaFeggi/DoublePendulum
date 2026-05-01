@@ -96,7 +96,6 @@ add_executable(DoublePendulum
     src/app/fps.c
     src/app/input.c
     src/app/render_data.c
-    src/app/threadpool.c
     src/app/window.c
     "${DOUBLE_PENDULUM_RENDERER_DIR}/color.c"
     "${DOUBLE_PENDULUM_RENDERER_DIR}/renderer.c"
@@ -104,8 +103,8 @@ add_executable(DoublePendulum
     src/simulation/integrators/rk4.c
     src/simulation/pendulum.c
     src/simulation/pendulum_equations.c
-    src/simulation/rod.c
     src/simulation/simulation.c
+    src/utils/threadpool.c
 )
 
 target_include_directories(DoublePendulum PRIVATE
@@ -115,6 +114,7 @@ target_include_directories(DoublePendulum PRIVATE
     "${DOUBLE_PENDULUM_RENDERER_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/simulation"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/simulation/integrators"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/utils"
 )
 
 target_compile_definitions(DoublePendulum PRIVATE SDL_MAIN_HANDLED)

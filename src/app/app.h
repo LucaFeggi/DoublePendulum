@@ -5,18 +5,21 @@
 #include "window.h"
 #include "render_data.h"
 
-#include "../simulation/simulation.h"
 #include "../renderer/renderer.h"
+#include "../simulation/simulation.h"
+#include "../utils/threadpool.h"
 
 #include <stdbool.h>
 
-typedef struct{
-	Fps fps;
-	Simulation simulation;
-	Window window;
-	RenderData render_data;
-	Renderer renderer;
-}App;
+typedef struct {
+    Fps fps;
+    ThreadPool threadpool;
+    bool threadpool_enabled;
+    Simulation simulation;
+    Window window;
+    RenderData render_data;
+    Renderer renderer;
+} App;
 
 bool app_init(App *app);
 void app_run(App *app);

@@ -14,6 +14,7 @@ bool window_init(Window *window);
 void window_quit(Window *window);
 void window_show(const Window *window);
 bool window_is_minimized(const Window *window);
+bool window_get_render_size(const Window *window, int *w, int *h);
 void window_update_title(Window *window, double delta_time, double render_fps, double sim_steps_per_second);
 
 #endif // APP_WINDOW_H

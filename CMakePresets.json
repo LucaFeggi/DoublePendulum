@@ -19,7 +19,7 @@
       "name": "debug",
       "displayName": "Debug (native Ninja)",
       "inherits": "native-ninja",
-      "binaryDir": "${sourceDir}/.build/${hostSystemName}/debug",
+      "binaryDir": "${sourceDir}/.build/${hostSystemName}/msvc-x64/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -28,7 +28,7 @@
       "name": "release",
       "displayName": "Release (native Ninja)",
       "inherits": "native-ninja",
-      "binaryDir": "${sourceDir}/.build/${hostSystemName}/release",
+      "binaryDir": "${sourceDir}/.build/${hostSystemName}/msvc-x64/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }

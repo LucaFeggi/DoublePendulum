@@ -1,10 +1,16 @@
 #include "app/app.h"
 
-int main(){
+#include <stdlib.h>
+
+int main(void) {
     App app;
-    if(app_init(&app)){
-        app_run(&app);
-        app_quit(&app);
+
+    if(!app_init(&app)) {
+        return EXIT_FAILURE;
     }
-    return 0;
+
+    app_run(&app);
+    app_quit(&app);
+
+    return EXIT_SUCCESS;
 }

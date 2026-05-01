@@ -1,6 +1,6 @@
 #include "../renderer.h"
 
-#include "../../config.h"
+#include "../../config/config.h"
 #include "color.h"
 
 #include <math.h>
@@ -15,8 +15,6 @@ static bool renderer_trails_enabled(void) {
 typedef struct {
     Renderer *renderer;
     RenderData *render_data;
-    int w;
-    int h;
     int center_x;
     int center_y;
     float max_rend_len;
@@ -58,10 +56,6 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
         rod1->x1 = x1;
         rod1->y1 = y1;
         rod1->color = color[1];
-
-        if(renderer->trail != NULL) {
-            trail_add(&renderer->trail[i], x1, y1, color[1], job->w, job->h);
-        }
     }
 }
 
@@ -79,59 +73,64 @@ bool renderer_init(Renderer *renderer, Window *window) {
     renderer->win_ptr = window->ptr;
     renderer->ptr = NULL;
     renderer->rod_lines = NULL;
-    renderer->trail = NULL;
+    renderer->trail_enabled = renderer_trails_enabled();
+    trail_layer_init(&renderer->trail, 0);
 
-    renderer->ptr = SDL_CreateRenderer(window->ptr, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if(renderer->ptr == NULL){
+    Uint32 renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+    if(renderer->trail_enabled) {
+        renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
+    }
+
+    renderer->ptr = SDL_CreateRenderer(
+        window->ptr,
+        -1,
+        renderer_flags
+    );
+    if(renderer->ptr == NULL) {
         SDL_Log("Could not create renderer: %s", SDL_GetError());
         return false;
     }
     SDL_SetRenderDrawBlendMode(renderer->ptr, SDL_BLENDMODE_BLEND);
 
-    renderer->rod_lines = (RenderLine *)malloc((size_t)TOTAL_PENDULUMS * 2 * sizeof(RenderLine));
+    renderer->rod_lines = (RenderLine *)malloc((size_t)TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM * sizeof(RenderLine));
     if(renderer->rod_lines == NULL) {
         SDL_Log("Could not allocate SDL rod line commands.");
         renderer_quit(renderer);
         return false;
     }
 
-    if(renderer_trails_enabled()) {
-        renderer->trail = (Trail *)malloc(TOTAL_PENDULUMS * sizeof(Trail));
-        if(renderer->trail == NULL) {
-            SDL_Log("Could not allocate SDL trail buffers.");
-            renderer_quit(renderer);
-            return false;
-        }
-
-        for(int i = 0; i < TOTAL_PENDULUMS; i++) {
-            trail_init(&renderer->trail[i]);
-        }
+    if(renderer->trail_enabled && !trail_layer_init(&renderer->trail, TOTAL_PENDULUMS)) {
+        SDL_Log("Could not allocate SDL trail buffers.");
+        renderer_quit(renderer);
+        return false;
     }
+
     return true;
 }
 
 void renderer_quit(Renderer *renderer) {
+    if(!renderer) {
+        return;
+    }
+
     free(renderer->rod_lines);
     renderer->rod_lines = NULL;
 
-    free(renderer->trail);
-    renderer->trail = NULL;
+    trail_layer_quit(&renderer->trail);
+    renderer->trail_enabled = false;
 
-    if(renderer->ptr != NULL){
+    if(renderer->ptr != NULL) {
         SDL_DestroyRenderer(renderer->ptr);
+        renderer->ptr = NULL;
     }
-    renderer->ptr = NULL;
+
+    renderer->win_ptr = NULL;
 }
 
-static void renderer_prepare(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool){
-    int w, h;
-    SDL_GetWindowSize(renderer->win_ptr, &w, &h);
-
+static void renderer_prepare(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h) {
     RendererPrepareJob job = {
         .renderer = renderer,
         .render_data = render_data,
-        .w = w,
-        .h = h,
         .center_x = w / 2,
         .center_y = h / 2,
         .max_rend_len = (w < h) ? w / 5.0f : h / 5.0f
@@ -145,30 +144,30 @@ static void renderer_prepare(Renderer *renderer, RenderData *render_data, Thread
     }
 }
 
-static void renderer_draw(Renderer *renderer){
-    int w = 0;
-    int h = 0;
-    bool render_trails = renderer->trail != NULL;
+static void renderer_draw(Renderer *renderer, int w, int h) {
+    bool render_trails = renderer->trail_enabled;
     if(render_trails) {
-        SDL_GetWindowSize(renderer->win_ptr, &w, &h);
+        trail_layer_update(&renderer->trail, renderer->ptr, renderer->rod_lines, w, h);
     }
 
-    SDL_SetRenderDrawColor(renderer->ptr, 0x0, 0x0, 0x0, 0x0);
+    SDL_SetRenderTarget(renderer->ptr, NULL);
+    SDL_SetRenderDrawBlendMode(renderer->ptr, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer->ptr, 0x0, 0x0, 0x0, 0xff);
     SDL_RenderClear(renderer->ptr);
+
+    if(render_trails) {
+        trail_layer_draw(&renderer->trail, renderer->ptr);
+    }
 
     for(int i = 0; i < TOTAL_PENDULUMS; i++) {
         renderer_draw_line(renderer->ptr, &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM]);
         renderer_draw_line(renderer->ptr, &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1]);
-
-        if(render_trails) {
-            trail_render(&renderer->trail[i], w, h, renderer->ptr);
-        }
     }
 
     SDL_RenderPresent(renderer->ptr);
 }
 
-void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool) {
-    renderer_prepare(renderer, render_data, threadpool);
-    renderer_draw(renderer);
+void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h) {
+    renderer_prepare(renderer, render_data, threadpool, w, h);
+    renderer_draw(renderer, w, h);
 }

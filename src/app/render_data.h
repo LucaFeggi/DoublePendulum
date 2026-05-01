@@ -2,21 +2,18 @@
 #define APP_RENDER_DATA_H
 
 #include "../simulation/simulation.h"
+#include "../simulation/simulation_snapshot.h"
 
-typedef struct{
-    float len[2];       // rendering
-    float angle[2];     // rendering
-    float ang_vel[2];   // coloring
-}PendulumRenderData;
+typedef PendulumRenderSample PendulumRenderData;
 
-typedef struct{
-    float max_len;      // max length of a rod - rendering
-    float max_ang_vel;  // coloring
+typedef struct {
+    float max_len;
+    float max_ang_vel;
     PendulumRenderData *pen_data;
-}RenderData;    // all data from simulation for the render on GPU
+} RenderData;
 
-bool render_data_init(RenderData *sim_data, const Simulation *simulation);
-void render_data_quit(RenderData *sim_data);
-void render_data_pack(RenderData *sim_data, const Simulation *simulation);
+bool render_data_init(RenderData *render_data, const Simulation *simulation);
+void render_data_quit(RenderData *render_data);
+void render_data_pack(RenderData *render_data, const Simulation *simulation);
 
 #endif // APP_RENDER_DATA_H

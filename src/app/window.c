@@ -55,6 +55,11 @@ bool window_is_minimized(const Window *window){
     return (SDL_GetWindowFlags(window->ptr) & SDL_WINDOW_MINIMIZED) != 0;
 }
 
+bool window_get_render_size(const Window *window, int *w, int *h) {
+    SDL_GetWindowSize(window->ptr, w, h);
+    return *w > 0 && *h > 0;
+}
+
 void window_update_title(Window *window, double delta_time, double render_fps, double sim_steps_per_second){
     window->title_timer += delta_time;
     if(window->title_timer >= 1.0) {

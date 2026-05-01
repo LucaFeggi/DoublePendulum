@@ -1,41 +1,30 @@
 #ifndef RENDERER_SDL_TRAIL_H
 #define RENDERER_SDL_TRAIL_H
 
-#include "../../config.h"
-
 #include <stdbool.h>
 
 #include "SDL.h"
 
-typedef struct{
+typedef struct {
     int x0;
     int y0;
     int x1;
     int y1;
     SDL_Color color;
-}RenderLine;
+} RenderLine;
 
-typedef struct{
-    float x0;
-    float y0;
-    float x1;
-    float y1;
-    SDL_Color color;
-}TrailSegment;
+typedef struct {
+    SDL_Texture *texture;
+    SDL_FPoint *last_tip;
+    bool *has_last;
+    int pendulum_count;
+    int w;
+    int h;
+} TrailLayer;
 
-typedef struct{
-    float last_x;
-    float last_y;
-    bool has_last;
-#if TOTAL_TRAIL_SAMPLES > 1
-    TrailSegment segments[TOTAL_TRAIL_SAMPLES - 1];
-#endif
-    int segment_count;
-    int head;
-}Trail;     // circular buffer for storing normalized trail segments
-
-void trail_init(Trail *t);
-void trail_add(Trail *t, int x, int y, SDL_Color color, int w, int h);
-void trail_render(const Trail *t, int w, int h, SDL_Renderer *ptr);
+bool trail_layer_init(TrailLayer *trail, int pendulum_count);
+void trail_layer_quit(TrailLayer *trail);
+bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const RenderLine *rod_lines, int w, int h);
+void trail_layer_draw(const TrailLayer *trail, SDL_Renderer *renderer);
 
 #endif // RENDERER_SDL_TRAIL_H

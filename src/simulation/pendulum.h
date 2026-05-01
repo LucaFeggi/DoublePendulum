@@ -1,18 +1,23 @@
 #ifndef SIMULATION_PENDULUM_H
 #define SIMULATION_PENDULUM_H
 
-#include "rod.h"
+typedef struct {
+    double len[2];
+    double mass[2];
+} PendulumParams;
 
-typedef struct{
-    Rod rod[2];
-}Pendulum;
+typedef struct {
+    double angle[2];
+    double ang_vel[2];
+} PendulumState;
 
-void pendulum_init_custom(
-    Pendulum *pendulum,
-    double angle0, double ang_vel0, double len0, double mass0,
-    double angle1, double ang_vel1, double len1, double mass1
+void pendulum_state_init(
+    PendulumState *state,
+    double angle0,
+    double ang_vel0,
+    double angle1,
+    double ang_vel1
 );
-void pendulum_init_default(Pendulum *pendulum, double angle);
-void pendulum_update(Pendulum *pendulum);
+void pendulum_update(PendulumState *state, const PendulumParams *params);
 
 #endif // SIMULATION_PENDULUM_H
