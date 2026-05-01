@@ -15,8 +15,15 @@ typedef struct {
 
 typedef struct {
     SDL_Texture *texture;
+} TrailBucket;
+
+typedef struct {
+    TrailBucket *buckets;
     SDL_FPoint *last_tip;
     bool *has_last;
+    float bucket_timer;
+    int current_bucket;
+    int bucket_count;
     int pendulum_count;
     int w;
     int h;
@@ -24,7 +31,7 @@ typedef struct {
 
 bool trail_layer_init(TrailLayer *trail, int pendulum_count);
 void trail_layer_quit(TrailLayer *trail);
-bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const RenderLine *rod_lines, int w, int h);
+bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const RenderLine *rod_lines, int w, int h, float delta_time);
 void trail_layer_draw(const TrailLayer *trail, SDL_Renderer *renderer);
 
 #endif // RENDERER_SDL_TRAIL_H

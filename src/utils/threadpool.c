@@ -6,12 +6,13 @@
 
 static int threadpool_choose_active_jobs(int count, int num_threads) {
     int active_jobs = (count + THREADPOOL_MIN_ITEMS_PER_JOB - 1) / THREADPOOL_MIN_ITEMS_PER_JOB;
+    int max_jobs = num_threads + 1;
 
     if(active_jobs < 1) {
         active_jobs = 1;
     }
-    if(active_jobs > num_threads) {
-        active_jobs = num_threads;
+    if(active_jobs > max_jobs) {
+        active_jobs = max_jobs;
     }
 
     return active_jobs;
@@ -45,11 +46,12 @@ static int threadpool_worker_thread(void *param) {
         void *job_context = threadpool->job_context;
         int job_count = threadpool->job_count;
         int active_jobs = threadpool->active_jobs;
+        int worker_jobs = active_jobs - 1;
         int worker_id = worker->worker_id;
 
         worker->last_generation = threadpool->generation;
 
-        if(worker_id >= active_jobs) {
+        if(worker_id >= worker_jobs) {
             mtx_unlock(&threadpool->lock);
             continue;
         }
@@ -167,10 +169,20 @@ int threadpool_parallel_for(ThreadPool *threadpool, int count, ThreadPoolJobFn j
     threadpool->job_context = job_context;
     threadpool->job_count = count;
     threadpool->active_jobs = active_jobs;
-    threadpool->jobs_remaining = active_jobs;
+    threadpool->jobs_remaining = active_jobs - 1;
     threadpool->generation++;
 
     cnd_broadcast(&threadpool->cv_work);
+
+    mtx_unlock(&threadpool->lock);
+
+    int caller_worker_id = active_jobs - 1;
+    int start_index;
+    int end_index;
+    threadpool_get_chunk(count, active_jobs, caller_worker_id, &start_index, &end_index);
+    job_fn(job_context, start_index, end_index, caller_worker_id);
+
+    mtx_lock(&threadpool->lock);
     while(threadpool->jobs_remaining > 0) {
         cnd_wait(&threadpool->cv_done, &threadpool->lock);
     }

@@ -32,7 +32,7 @@
 #define SIMULATION_DT (1.0 / (double)SIMULATION_STEPS_PER_SECOND)
 #define SIMULATION_TIME_SCALE 3
 
-#define TOTAL_PENDULUMS 10
+#define TOTAL_PENDULUMS 2000
 
 // ----- Performance parameters -----
 

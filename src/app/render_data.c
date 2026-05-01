@@ -2,6 +2,7 @@
 
 #include "../config/config.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 bool render_data_init(RenderData *rd, const Simulation *sim) {
@@ -27,9 +28,17 @@ void render_data_quit(RenderData *rd) {
     rd->max_ang_vel = 0.0f;
 }
 
-void render_data_pack(RenderData *rd, const Simulation *sim) {
+static float render_data_color_decay_for_delta_time(float delta_time) {
+    if(!(delta_time > 0.0f)) {
+        return 1.0f;
+    }
+
+    return powf((float)COLOR_DECAY, delta_time * (float)COLOR_DECAY_REFERENCE_FPS);
+}
+
+void render_data_pack(RenderData *rd, const Simulation *sim, float delta_time) {
     float current_max_ang_vel = (float)simulation_get_max_ang_vel(sim);
-    float decayed_max_ang_vel = rd->max_ang_vel * (float)COLOR_DECAY;
+    float decayed_max_ang_vel = rd->max_ang_vel * render_data_color_decay_for_delta_time(delta_time);
     rd->max_ang_vel = current_max_ang_vel > decayed_max_ang_vel
         ? current_max_ang_vel
         : decayed_max_ang_vel;

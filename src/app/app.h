@@ -15,6 +15,8 @@ typedef struct {
     Fps fps;
     ThreadPool threadpool;
     bool threadpool_enabled;
+    double *thread_max_ang_vel;
+    int thread_max_capacity;
     Simulation simulation;
     Window window;
     RenderData render_data;

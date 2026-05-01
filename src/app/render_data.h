@@ -14,6 +14,6 @@ typedef struct {
 
 bool render_data_init(RenderData *render_data, const Simulation *simulation);
 void render_data_quit(RenderData *render_data);
-void render_data_pack(RenderData *render_data, const Simulation *simulation);
+void render_data_pack(RenderData *render_data, const Simulation *simulation, float delta_time);
 
 #endif // APP_RENDER_DATA_H

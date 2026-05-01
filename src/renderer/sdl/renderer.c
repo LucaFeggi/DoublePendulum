@@ -144,10 +144,10 @@ static void renderer_prepare(Renderer *renderer, RenderData *render_data, Thread
     }
 }
 
-static void renderer_draw(Renderer *renderer, int w, int h) {
+static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     bool render_trails = renderer->trail_enabled;
     if(render_trails) {
-        trail_layer_update(&renderer->trail, renderer->ptr, renderer->rod_lines, w, h);
+        trail_layer_update(&renderer->trail, renderer->ptr, renderer->rod_lines, w, h, delta_time);
     }
 
     SDL_SetRenderTarget(renderer->ptr, NULL);
@@ -167,7 +167,7 @@ static void renderer_draw(Renderer *renderer, int w, int h) {
     SDL_RenderPresent(renderer->ptr);
 }
 
-void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h) {
+void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h, float delta_time) {
     renderer_prepare(renderer, render_data, threadpool, w, h);
-    renderer_draw(renderer, w, h);
+    renderer_draw(renderer, w, h, delta_time);
 }

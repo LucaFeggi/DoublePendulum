@@ -36,7 +36,7 @@ typedef struct ThreadPool {
 bool threadpool_init(ThreadPool *threadpool, int num_threads);
 bool threadpool_quit(ThreadPool *threadpool);
 
-// Synchronous. The controlling thread waits idle; it does not process a chunk.
+// Synchronous. The controlling thread processes one chunk while worker threads process the rest.
 int threadpool_parallel_for(ThreadPool *threadpool, int count, ThreadPoolJobFn job_fn, void *job_context);
 int threadpool_get_num_threads(const ThreadPool *threadpool);
 

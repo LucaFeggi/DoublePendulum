@@ -2,8 +2,6 @@
 
 #include "../config/config.h"
 
-#include "SDL.h"
-
 #include <math.h>
 #include <stdlib.h>
 
@@ -13,11 +11,6 @@ typedef struct {
     double angle_adder[2];
     double ang_vel[2];
 } SimulationInitSpec;
-
-typedef struct {
-    Simulation *simulation;
-    int steps;
-} SimulationUpdateJob;
 
 static double simulation_compute_max_len(const PendulumParams *params) {
     return params->len[0] > params->len[1] ? params->len[0] : params->len[1];
@@ -29,35 +22,14 @@ static double simulation_compute_initial_max_ang_vel(const double ang_vel[2]) {
     return v0 > v1 ? v0 : v1;
 }
 
-static bool simulation_init_thread_scratch(Simulation *simulation, int worker_threads) {
-    simulation->thread_max_ang_vel = NULL;
-    simulation->thread_max_capacity = 0;
-
-    if(worker_threads <= 0) {
-        return true;
-    }
-
-    simulation->thread_max_ang_vel = (double *)calloc((size_t)worker_threads, sizeof(double));
-    if(!simulation->thread_max_ang_vel) {
-        SDL_Log("ERROR: Failed to allocate thread-local angular velocity buffer.");
-        return false;
-    }
-
-    simulation->thread_max_capacity = worker_threads;
-    return true;
-}
-
-static bool simulation_init_from_spec(Simulation *simulation, const SimulationInitSpec *spec, int worker_threads) {
+static bool simulation_init_from_spec(Simulation *simulation, const SimulationInitSpec *spec) {
     simulation->params = spec->params;
     simulation->max_len = simulation_compute_max_len(&simulation->params);
     simulation->max_ang_vel = simulation_compute_initial_max_ang_vel(spec->ang_vel);
     simulation->state = NULL;
-    simulation->thread_max_ang_vel = NULL;
-    simulation->thread_max_capacity = 0;
 
     simulation->state = (PendulumState *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumState));
     if(simulation->state == NULL) {
-        SDL_Log("ERROR: Failed to allocate memory for pendulum state.");
         return false;
     }
 
@@ -71,15 +43,10 @@ static bool simulation_init_from_spec(Simulation *simulation, const SimulationIn
         );
     }
 
-    if(!simulation_init_thread_scratch(simulation, worker_threads)) {
-        simulation_quit(simulation);
-        return false;
-    }
-
     return true;
 }
 
-bool simulation_init_custom(Simulation *simulation, int worker_threads) {
+bool simulation_init_custom(Simulation *simulation) {
     SimulationInitSpec spec = {
         .params = {
             .len = { CUSTOM_LEN_ROD1, CUSTOM_LEN_ROD2 },
@@ -90,10 +57,10 @@ bool simulation_init_custom(Simulation *simulation, int worker_threads) {
         .ang_vel = { CUSTOM_ANG_VEL_ROD1, CUSTOM_ANG_VEL_ROD2 }
     };
 
-    return simulation_init_from_spec(simulation, &spec, worker_threads);
+    return simulation_init_from_spec(simulation, &spec);
 }
 
-bool simulation_init_default(Simulation *simulation, int worker_threads) {
+bool simulation_init_default(Simulation *simulation) {
     SimulationInitSpec spec = {
         .params = {
             .len = { DEFAULT_LEN, DEFAULT_LEN },
@@ -104,16 +71,29 @@ bool simulation_init_default(Simulation *simulation, int worker_threads) {
         .ang_vel = { DEFAULT_ANG_VEL, DEFAULT_ANG_VEL }
     };
 
-    return simulation_init_from_spec(simulation, &spec, worker_threads);
+    return simulation_init_from_spec(simulation, &spec);
 }
 
-static void simulation_update_range(
+double simulation_update_range(
     Simulation *simulation,
     int start_index,
     int end_index,
-    int steps,
-    double *out_max_ang_vel
+    int steps
 ) {
+    if(!simulation || !simulation->state || steps <= 0) {
+        return 0.0;
+    }
+
+    if(start_index < 0) {
+        start_index = 0;
+    }
+    if(end_index > TOTAL_PENDULUMS) {
+        end_index = TOTAL_PENDULUMS;
+    }
+    if(start_index >= end_index) {
+        return 0.0;
+    }
+
     double local_max_ang_vel = 0.0;
 
     for(int i = start_index; i < end_index; ++i) {
@@ -127,61 +107,15 @@ static void simulation_update_range(
         if(v1 > local_max_ang_vel) local_max_ang_vel = v1;
     }
 
-    *out_max_ang_vel = local_max_ang_vel;
+    return local_max_ang_vel;
 }
 
-static void simulation_update_job(void *context, int start_index, int end_index, int worker_id) {
-    SimulationUpdateJob *job = (SimulationUpdateJob *)context;
-    double local_max_ang_vel = 0.0;
-
-    simulation_update_range(job->simulation, start_index, end_index, job->steps, &local_max_ang_vel);
-
-    if(worker_id < job->simulation->thread_max_capacity) {
-        job->simulation->thread_max_ang_vel[worker_id] = local_max_ang_vel;
-    }
-}
-
-static double simulation_reduce_max_ang_vel(const Simulation *simulation, int active_jobs) {
-    double max_ang_vel = 0.0;
-
-    if(active_jobs > simulation->thread_max_capacity) {
-        active_jobs = simulation->thread_max_capacity;
-    }
-
-    for(int i = 0; i < active_jobs; ++i) {
-        if(simulation->thread_max_ang_vel[i] > max_ang_vel) {
-            max_ang_vel = simulation->thread_max_ang_vel[i];
-        }
-    }
-
-    return max_ang_vel;
-}
-
-static bool simulation_can_parallelize(const Simulation *simulation, const ThreadPool *threadpool) {
-    return threadpool_get_num_threads(threadpool) > 0
-        && TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD
-        && simulation->thread_max_ang_vel != NULL;
-}
-
-void simulation_update_steps(Simulation *simulation, ThreadPool *threadpool, int steps) {
+void simulation_update_steps(Simulation *simulation, int steps) {
     if(!simulation || !simulation->state || steps <= 0) {
         return;
     }
 
-    if(simulation_can_parallelize(simulation, threadpool)) {
-        SimulationUpdateJob job = {
-            .simulation = simulation,
-            .steps = steps
-        };
-
-        int active_jobs = threadpool_parallel_for(threadpool, TOTAL_PENDULUMS, simulation_update_job, &job);
-        if(active_jobs > 0) {
-            simulation->max_ang_vel = simulation_reduce_max_ang_vel(simulation, active_jobs);
-            return;
-        }
-    }
-
-    simulation_update_range(simulation, 0, TOTAL_PENDULUMS, steps, &simulation->max_ang_vel);
+    simulation->max_ang_vel = simulation_update_range(simulation, 0, TOTAL_PENDULUMS, steps);
 }
 
 void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, int count) {
@@ -203,6 +137,16 @@ void simulation_fill_render_samples(const Simulation *simulation, PendulumRender
     }
 }
 
+void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel) {
+    if(simulation) {
+        simulation->max_ang_vel = max_ang_vel;
+    }
+}
+
+int simulation_get_count(const Simulation *simulation) {
+    return simulation && simulation->state ? TOTAL_PENDULUMS : 0;
+}
+
 double simulation_get_max_len(const Simulation *simulation) {
     return simulation ? simulation->max_len : 0.0;
 }
@@ -215,10 +159,6 @@ void simulation_quit(Simulation *simulation) {
     if(!simulation) {
         return;
     }
-
-    free(simulation->thread_max_ang_vel);
-    simulation->thread_max_ang_vel = NULL;
-    simulation->thread_max_capacity = 0;
 
     free(simulation->state);
     simulation->state = NULL;

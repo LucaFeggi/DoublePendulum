@@ -9,6 +9,6 @@
 
 bool renderer_init(Renderer *renderer, Window *window);
 void renderer_quit(Renderer *renderer);
-void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h);
+void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h, float delta_time);
 
 #endif // RENDERER_RENDERER_H
