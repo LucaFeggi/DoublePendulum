@@ -25,7 +25,9 @@ _Static_assert(CUSTOM_MASS_ROD2 > 0, "CUSTOM_MASS_ROD2 must be > 0");
 
 _Static_assert(THREADPOOL_MIN_ITEMS_PER_JOB >= 1, "THREADPOOL_MIN_ITEMS_PER_JOB must be >= 1");
 
+_Static_assert(ROD_WIDTH_PER_MILLE > 0, "ROD_WIDTH_PER_MILLE must be > 0");
 _Static_assert(TRAIL == 0 || TRAIL == 1, "TRAIL must be 0 or 1");
+_Static_assert(TRAIL_WIDTH_PER_MILLE > 0, "TRAIL_WIDTH_PER_MILLE must be > 0");
 _Static_assert(TRAIL_DURATION_MILLISECONDS > 0, "TRAIL_DURATION_MILLISECONDS must be > 0");
 _Static_assert(TRAIL_BUCKET_MILLISECONDS > 0, "TRAIL_BUCKET_MILLISECONDS must be > 0");
 _Static_assert(TRAIL_BUCKET_COUNT >= 1, "TRAIL_BUCKET_COUNT must be >= 1");

@@ -64,15 +64,11 @@ static void renderer_prepare_job(void *context, int start_index, int end_index, 
     renderer_prepare_range((RendererPrepareJob *)context, start_index, end_index);
 }
 
-static void renderer_draw_line(SDL_Renderer *renderer, const RenderLine *line) {
-    SDL_SetRenderDrawColor(renderer, line->color.r, line->color.g, line->color.b, line->color.a);
-    SDL_RenderDrawLine(renderer, line->x0, line->y0, line->x1, line->y1);
-}
-
 bool renderer_init(Renderer *renderer, Window *window) {
     renderer->win_ptr = window->ptr;
     renderer->ptr = NULL;
     renderer->rod_lines = NULL;
+    line_batch_init(&renderer->rod_batch, 0);
     renderer->trail_enabled = renderer_trails_enabled();
     trail_layer_init(&renderer->trail, 0);
 
@@ -99,6 +95,12 @@ bool renderer_init(Renderer *renderer, Window *window) {
         return false;
     }
 
+    if(!line_batch_init(&renderer->rod_batch, TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM)) {
+        SDL_Log("Could not allocate SDL rod geometry batch.");
+        renderer_quit(renderer);
+        return false;
+    }
+
     if(renderer->trail_enabled && !trail_layer_init(&renderer->trail, TOTAL_PENDULUMS)) {
         SDL_Log("Could not allocate SDL trail buffers.");
         renderer_quit(renderer);
@@ -115,6 +117,7 @@ void renderer_quit(Renderer *renderer) {
 
     free(renderer->rod_lines);
     renderer->rod_lines = NULL;
+    line_batch_quit(&renderer->rod_batch);
 
     trail_layer_quit(&renderer->trail);
     renderer->trail_enabled = false;
@@ -144,6 +147,33 @@ static void renderer_prepare(Renderer *renderer, RenderData *render_data, Thread
     }
 }
 
+static bool renderer_draw_rods(Renderer *renderer) {
+    line_batch_reset(&renderer->rod_batch);
+
+    for(int i = 0; i < TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM; ++i) {
+        const RenderLine *line = &renderer->rod_lines[i];
+        if(!line_batch_add(
+            &renderer->rod_batch,
+            (float)line->x0,
+            (float)line->y0,
+            (float)line->x1,
+            (float)line->y1,
+            ROD_WIDTH_PIXELS,
+            line->color
+        )) {
+            SDL_Log("Could not add rod line to SDL geometry batch.");
+            return false;
+        }
+    }
+
+    if(!line_batch_draw(&renderer->rod_batch, renderer->ptr)) {
+        SDL_Log("Could not draw SDL rod geometry batch: %s", SDL_GetError());
+        return false;
+    }
+
+    return true;
+}
+
 static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     bool render_trails = renderer->trail_enabled;
     if(render_trails) {
@@ -159,10 +189,7 @@ static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
         trail_layer_draw(&renderer->trail, renderer->ptr);
     }
 
-    for(int i = 0; i < TOTAL_PENDULUMS; i++) {
-        renderer_draw_line(renderer->ptr, &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM]);
-        renderer_draw_line(renderer->ptr, &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1]);
-    }
+    renderer_draw_rods(renderer);
 
     SDL_RenderPresent(renderer->ptr);
 }

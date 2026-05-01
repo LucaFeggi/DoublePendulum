@@ -12,6 +12,7 @@ bool trail_layer_init(TrailLayer *trail, int pendulum_count) {
     trail->buckets = NULL;
     trail->last_tip = NULL;
     trail->has_last = NULL;
+    line_batch_init(&trail->line_batch, 0);
     trail->bucket_timer = 0.0f;
     trail->current_bucket = 0;
     trail->bucket_count = 0;
@@ -27,7 +28,7 @@ bool trail_layer_init(TrailLayer *trail, int pendulum_count) {
     trail->buckets = (TrailBucket *)calloc((size_t)trail->bucket_count, sizeof(TrailBucket));
     trail->last_tip = (SDL_FPoint *)calloc((size_t)pendulum_count, sizeof(SDL_FPoint));
     trail->has_last = (bool *)calloc((size_t)pendulum_count, sizeof(bool));
-    if(!trail->buckets || !trail->last_tip || !trail->has_last) {
+    if(!trail->buckets || !trail->last_tip || !trail->has_last || !line_batch_init(&trail->line_batch, pendulum_count)) {
         trail_layer_quit(trail);
         return false;
     }
@@ -52,6 +53,7 @@ void trail_layer_quit(TrailLayer *trail) {
     free(trail->buckets);
     free(trail->last_tip);
     free(trail->has_last);
+    line_batch_quit(&trail->line_batch);
     trail->buckets = NULL;
     trail->last_tip = NULL;
     trail->has_last = NULL;
@@ -273,18 +275,36 @@ bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const RenderL
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    line_batch_reset(&trail->line_batch);
 
     for(int i = 0; i < trail->pendulum_count; ++i) {
         const RenderLine *tip_rod = &rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
         SDL_FPoint tip = { (float)tip_rod->x1, (float)tip_rod->y1 };
 
         if(trail->has_last[i]) {
-            SDL_SetRenderDrawColor(renderer, tip_rod->color.r, tip_rod->color.g, tip_rod->color.b, tip_rod->color.a);
-            SDL_RenderDrawLineF(renderer, trail->last_tip[i].x, trail->last_tip[i].y, tip.x, tip.y);
+            if(!line_batch_add(
+                &trail->line_batch,
+                trail->last_tip[i].x,
+                trail->last_tip[i].y,
+                tip.x,
+                tip.y,
+                TRAIL_WIDTH_PIXELS,
+                tip_rod->color
+            )) {
+                SDL_Log("Could not add trail line to SDL geometry batch.");
+                SDL_SetRenderTarget(renderer, old_target);
+                return false;
+            }
         }
 
         trail->last_tip[i] = tip;
         trail->has_last[i] = true;
+    }
+
+    if(!line_batch_draw(&trail->line_batch, renderer)) {
+        SDL_Log("Could not draw SDL trail geometry batch: %s", SDL_GetError());
+        SDL_SetRenderTarget(renderer, old_target);
+        return false;
     }
 
     SDL_SetRenderTarget(renderer, old_target);

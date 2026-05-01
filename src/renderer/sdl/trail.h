@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#include "line_batch.h"
 #include "SDL.h"
 
 typedef struct {
@@ -21,6 +22,7 @@ typedef struct {
     TrailBucket *buckets;
     SDL_FPoint *last_tip;
     bool *has_last;
+    LineBatch line_batch;
     float bucket_timer;
     int current_bucket;
     int bucket_count;

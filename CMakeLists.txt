@@ -5,6 +5,7 @@ cmake_policy(SET CMP0091 NEW)
 project(DoublePendulum LANGUAGES C)
 
 include(CheckCSourceCompiles)
+include(CheckIPOSupported)
 
 if(WIN32)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
@@ -98,6 +99,7 @@ add_executable(DoublePendulum
     src/app/render_data.c
     src/app/window.c
     "${DOUBLE_PENDULUM_RENDERER_DIR}/color.c"
+    "${DOUBLE_PENDULUM_RENDERER_DIR}/line_batch.c"
     "${DOUBLE_PENDULUM_RENDERER_DIR}/renderer.c"
     "${DOUBLE_PENDULUM_RENDERER_DIR}/trail.c"
     src/simulation/integrators/rk4.c
@@ -106,6 +108,13 @@ add_executable(DoublePendulum
     src/simulation/simulation.c
     src/utils/threadpool.c
 )
+
+check_ipo_supported(RESULT DOUBLE_PENDULUM_IPO_SUPPORTED OUTPUT DOUBLE_PENDULUM_IPO_ERROR)
+if(DOUBLE_PENDULUM_IPO_SUPPORTED)
+    set_property(TARGET DoublePendulum PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+else()
+    message(WARNING "IPO/LTO is not supported by this toolchain: ${DOUBLE_PENDULUM_IPO_ERROR}")
+endif()
 
 target_include_directories(DoublePendulum PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
