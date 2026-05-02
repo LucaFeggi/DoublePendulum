@@ -7,6 +7,7 @@
 typedef PendulumRenderSample PendulumRenderData;
 
 typedef struct {
+    float len[2];
     float max_len;
     float max_ang_vel;
     PendulumRenderData *pen_data;

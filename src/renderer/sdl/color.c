@@ -56,6 +56,7 @@ static SDL_Color color_map(float t) {
 
 void color_get_double_pendulum(
     const PendulumRenderData *pen,
+    const float len[2],
     float max_ang_vel,
     const PendulumTrig *trig,
     SDL_Color color[2]
@@ -64,7 +65,7 @@ void color_get_double_pendulum(
         return;
     }
 
-    if(pen == NULL) {
+    if(pen == NULL || len == NULL) {
         color[0] = color_map(0.0f);
         color[1] = color_map(0.0f);
         return;
@@ -79,8 +80,8 @@ void color_get_double_pendulum(
         trig = &local_trig;
     }
 
-    float len0 = pen->len[0];
-    float len1_com = pen->len[1] * 0.5f;
+    float len0 = len[0];
+    float len1_com = len[1] * 0.5f;
     float omega0 = pen->ang_vel[0];
     float omega1 = pen->ang_vel[1];
 

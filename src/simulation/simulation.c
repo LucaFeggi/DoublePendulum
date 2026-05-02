@@ -128,8 +128,6 @@ void simulation_fill_render_samples(const Simulation *simulation, PendulumRender
     }
 
     for(int i = 0; i < count; ++i) {
-        out[i].len[0] = (float)simulation->params.len[0];
-        out[i].len[1] = (float)simulation->params.len[1];
         out[i].angle[0] = (float)simulation->state[i].angle[0];
         out[i].angle[1] = (float)simulation->state[i].angle[1];
         out[i].ang_vel[0] = (float)simulation->state[i].ang_vel[0];
@@ -145,6 +143,14 @@ void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel) {
 
 int simulation_get_count(const Simulation *simulation) {
     return simulation && simulation->state ? TOTAL_PENDULUMS : 0;
+}
+
+double simulation_get_len(const Simulation *simulation, int rod_index) {
+    if(!simulation || rod_index < 0 || rod_index >= 2) {
+        return 0.0;
+    }
+
+    return simulation->params.len[rod_index];
 }
 
 double simulation_get_max_len(const Simulation *simulation) {

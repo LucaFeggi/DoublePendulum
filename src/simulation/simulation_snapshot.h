@@ -2,7 +2,6 @@
 #define SIMULATION_SIMULATION_SNAPSHOT_H
 
 typedef struct {
-    float len[2];
     float angle[2];
     float ang_vel[2];
 } PendulumRenderSample;

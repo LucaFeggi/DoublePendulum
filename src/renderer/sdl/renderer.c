@@ -17,7 +17,7 @@ typedef struct {
     RenderData *render_data;
     int center_x;
     int center_y;
-    float max_rend_len;
+    float render_len[2];
 } RendererPrepareJob;
 
 static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int end_index) {
@@ -25,8 +25,8 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
     RenderData *render_data = job->render_data;
 
     for(int i = start_index; i < end_index; i++) {
-        float len0 = render_data->pen_data[i].len[0] / render_data->max_len * job->max_rend_len;
-        float len1 = render_data->pen_data[i].len[1] / render_data->max_len * job->max_rend_len;
+        float len0 = job->render_len[0];
+        float len1 = job->render_len[1];
         PendulumTrig trig = {
             .sin0 = sinf(render_data->pen_data[i].angle[0]),
             .cos0 = cosf(render_data->pen_data[i].angle[0]),
@@ -41,7 +41,7 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
         int y1 = y0 + (int)(len1 * trig.cos1);
 
         SDL_Color color[2];
-        color_get_double_pendulum(&render_data->pen_data[i], render_data->max_ang_vel, &trig, color);
+        color_get_double_pendulum(&render_data->pen_data[i], render_data->len, render_data->max_ang_vel, &trig, color);
 
         RenderLine *rod0 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
         rod0->x0 = job->center_x;
@@ -135,9 +135,15 @@ static void renderer_prepare(Renderer *renderer, RenderData *render_data, Thread
         .renderer = renderer,
         .render_data = render_data,
         .center_x = w / 2,
-        .center_y = h / 2,
-        .max_rend_len = (w < h) ? w / 5.0f : h / 5.0f
+        .center_y = h / 2
     };
+
+    float max_rend_len = (w < h) ? w / 5.0f : h / 5.0f;
+    float render_scale = render_data->max_len > 0.0f
+        ? max_rend_len / render_data->max_len
+        : 0.0f;
+    job.render_len[0] = render_data->len[0] * render_scale;
+    job.render_len[1] = render_data->len[1] * render_scale;
 
     if(threadpool != NULL) {
         threadpool_parallel_for(threadpool, TOTAL_PENDULUMS, renderer_prepare_job, &job);

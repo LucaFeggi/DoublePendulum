@@ -6,6 +6,8 @@
 #include <stdlib.h>
 
 bool render_data_init(RenderData *rd, const Simulation *sim) {
+    rd->len[0] = (float)simulation_get_len(sim, 0);
+    rd->len[1] = (float)simulation_get_len(sim, 1);
     rd->max_len = (float)simulation_get_max_len(sim);
     rd->max_ang_vel = 0.0f;
     rd->pen_data = (PendulumRenderData *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumRenderData));
@@ -24,6 +26,8 @@ void render_data_quit(RenderData *rd) {
 
     free(rd->pen_data);
     rd->pen_data = NULL;
+    rd->len[0] = 0.0f;
+    rd->len[1] = 0.0f;
     rd->max_len = 0.0f;
     rd->max_ang_vel = 0.0f;
 }

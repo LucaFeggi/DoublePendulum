@@ -20,6 +20,7 @@ void simulation_update_steps(Simulation *simulation, int steps);
 void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, int count);
 void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel);
 int simulation_get_count(const Simulation *simulation);
+double simulation_get_len(const Simulation *simulation, int rod_index);
 double simulation_get_max_len(const Simulation *simulation);
 double simulation_get_max_ang_vel(const Simulation *simulation);
 void simulation_quit(Simulation *simulation);
