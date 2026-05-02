@@ -7,71 +7,179 @@
   },
   "configurePresets": [
     {
-      "name": "native-ninja",
+      "name": "dp-gcc-ninja",
       "hidden": true,
       "generator": "Ninja",
-      "toolchainFile": "${sourceDir}/cmake/toolchains/native.cmake",
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
-      "name": "debug",
-      "displayName": "Debug (native Ninja)",
-      "inherits": "native-ninja",
-      "binaryDir": "${sourceDir}/.build/${hostSystemName}/msvc-x64/debug",
+      "name": "dp-win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug",
+      "inherits": "dp-gcc-ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "binaryDir": "${sourceDir}/.build/dp-win32-rk4-sdl-debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "DP_PLATFORM": "win32",
+        "DP_INTEGRATOR": "rk4",
+        "DP_RENDERER": "sdl"
       }
     },
     {
-      "name": "release",
-      "displayName": "Release (native Ninja)",
-      "inherits": "native-ninja",
-      "binaryDir": "${sourceDir}/.build/${hostSystemName}/msvc-x64/release",
+      "name": "dp-win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release",
+      "inherits": "dp-gcc-ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "binaryDir": "${sourceDir}/.build/dp-win32-rk4-sdl-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "DP_PLATFORM": "win32",
+        "DP_INTEGRATOR": "rk4",
+        "DP_RENDERER": "sdl"
+      }
+    },
+    {
+      "name": "dp-posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug",
+      "inherits": "dp-gcc-ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "binaryDir": "${sourceDir}/.build/dp-posix-rk4-sdl-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "DP_PLATFORM": "posix",
+        "DP_INTEGRATOR": "rk4",
+        "DP_RENDERER": "sdl"
+      }
+    },
+    {
+      "name": "dp-posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release",
+      "inherits": "dp-gcc-ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "binaryDir": "${sourceDir}/.build/dp-posix-rk4-sdl-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "DP_PLATFORM": "posix",
+        "DP_INTEGRATOR": "rk4",
+        "DP_RENDERER": "sdl"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "configurePreset": "debug"
+      "name": "dp-win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug",
+      "configurePreset": "dp-win32-rk4-sdl-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     },
     {
-      "name": "release",
-      "displayName": "Release",
-      "configurePreset": "release"
+      "name": "dp-win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release",
+      "configurePreset": "dp-win32-rk4-sdl-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "dp-posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug",
+      "configurePreset": "dp-posix-rk4-sdl-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "dp-posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release",
+      "configurePreset": "dp-posix-rk4-sdl-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     }
   ],
   "workflowPresets": [
     {
-      "name": "debug",
-      "displayName": "Debug",
+      "name": "dp-win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug",
       "steps": [
         {
           "type": "configure",
-          "name": "debug"
+          "name": "dp-win32-rk4-sdl-debug"
         },
         {
           "type": "build",
-          "name": "debug"
+          "name": "dp-win32-rk4-sdl-debug"
         }
       ]
     },
     {
-      "name": "release",
-      "displayName": "Release",
+      "name": "dp-win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release",
       "steps": [
         {
           "type": "configure",
-          "name": "release"
+          "name": "dp-win32-rk4-sdl-release"
         },
         {
           "type": "build",
-          "name": "release"
+          "name": "dp-win32-rk4-sdl-release"
+        }
+      ]
+    },
+    {
+      "name": "dp-posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "dp-posix-rk4-sdl-debug"
+        },
+        {
+          "type": "build",
+          "name": "dp-posix-rk4-sdl-debug"
+        }
+      ]
+    },
+    {
+      "name": "dp-posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "dp-posix-rk4-sdl-release"
+        },
+        {
+          "type": "build",
+          "name": "dp-posix-rk4-sdl-release"
         }
       ]
     }
