@@ -11,11 +11,11 @@ set(DP_SUPPORTED_INTEGRATORS rk4)
 set(DP_SUPPORTED_RENDERERS sdl)
 
 if(NOT CMAKE_GENERATOR MATCHES "^Ninja")
-    message(FATAL_ERROR "DoublePendulum requires the Ninja generator. Configure with one of the dp-* presets.")
+    message(FATAL_ERROR "DoublePendulum requires the Ninja generator. Configure with one of the CMake presets.")
 endif()
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    message(FATAL_ERROR "DoublePendulum requires GCC. Configure with one of the dp-* presets.")
+    message(FATAL_ERROR "DoublePendulum requires GCC. Configure with one of the CMake presets.")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

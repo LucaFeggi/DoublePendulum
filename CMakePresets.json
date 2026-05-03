@@ -7,7 +7,7 @@
   },
   "configurePresets": [
     {
-      "name": "dp-gcc-ninja",
+      "name": "gcc-ninja",
       "hidden": true,
       "generator": "Ninja",
       "cacheVariables": {
@@ -17,15 +17,15 @@
       }
     },
     {
-      "name": "dp-win32-rk4-sdl-debug",
-      "displayName": "Windows GCC RK4 SDL Debug",
-      "inherits": "dp-gcc-ninja",
+      "name": "win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug | .\\.build\\win32-rk4-sdl-debug\\bin\\DoublePendulum.exe",
+      "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "binaryDir": "${sourceDir}/.build/dp-win32-rk4-sdl-debug",
+      "binaryDir": "${sourceDir}/.build/win32-rk4-sdl-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "DP_PLATFORM": "win32",
@@ -34,15 +34,15 @@
       }
     },
     {
-      "name": "dp-win32-rk4-sdl-release",
-      "displayName": "Windows GCC RK4 SDL Release",
-      "inherits": "dp-gcc-ninja",
+      "name": "win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe",
+      "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "binaryDir": "${sourceDir}/.build/dp-win32-rk4-sdl-release",
+      "binaryDir": "${sourceDir}/.build/win32-rk4-sdl-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "DP_PLATFORM": "win32",
@@ -51,15 +51,15 @@
       }
     },
     {
-      "name": "dp-posix-rk4-sdl-debug",
-      "displayName": "Linux GCC RK4 SDL Debug",
-      "inherits": "dp-gcc-ninja",
+      "name": "posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug | ./.build/posix-rk4-sdl-debug/bin/DoublePendulum",
+      "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
       },
-      "binaryDir": "${sourceDir}/.build/dp-posix-rk4-sdl-debug",
+      "binaryDir": "${sourceDir}/.build/posix-rk4-sdl-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "DP_PLATFORM": "posix",
@@ -68,15 +68,15 @@
       }
     },
     {
-      "name": "dp-posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release",
-      "inherits": "dp-gcc-ninja",
+      "name": "posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
+      "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Linux"
       },
-      "binaryDir": "${sourceDir}/.build/dp-posix-rk4-sdl-release",
+      "binaryDir": "${sourceDir}/.build/posix-rk4-sdl-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "DP_PLATFORM": "posix",
@@ -87,9 +87,9 @@
   ],
   "buildPresets": [
     {
-      "name": "dp-win32-rk4-sdl-debug",
-      "displayName": "Windows GCC RK4 SDL Debug",
-      "configurePreset": "dp-win32-rk4-sdl-debug",
+      "name": "win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug | .\\.build\\win32-rk4-sdl-debug\\bin\\DoublePendulum.exe",
+      "configurePreset": "win32-rk4-sdl-debug",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -97,9 +97,9 @@
       }
     },
     {
-      "name": "dp-win32-rk4-sdl-release",
-      "displayName": "Windows GCC RK4 SDL Release",
-      "configurePreset": "dp-win32-rk4-sdl-release",
+      "name": "win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe",
+      "configurePreset": "win32-rk4-sdl-release",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -107,9 +107,9 @@
       }
     },
     {
-      "name": "dp-posix-rk4-sdl-debug",
-      "displayName": "Linux GCC RK4 SDL Debug",
-      "configurePreset": "dp-posix-rk4-sdl-debug",
+      "name": "posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug | ./.build/posix-rk4-sdl-debug/bin/DoublePendulum",
+      "configurePreset": "posix-rk4-sdl-debug",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -117,9 +117,9 @@
       }
     },
     {
-      "name": "dp-posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release",
-      "configurePreset": "dp-posix-rk4-sdl-release",
+      "name": "posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
+      "configurePreset": "posix-rk4-sdl-release",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -129,58 +129,58 @@
   ],
   "workflowPresets": [
     {
-      "name": "dp-win32-rk4-sdl-debug",
-      "displayName": "Windows GCC RK4 SDL Debug",
+      "name": "win32-rk4-sdl-debug",
+      "displayName": "Windows GCC RK4 SDL Debug | .\\.build\\win32-rk4-sdl-debug\\bin\\DoublePendulum.exe",
       "steps": [
         {
           "type": "configure",
-          "name": "dp-win32-rk4-sdl-debug"
+          "name": "win32-rk4-sdl-debug"
         },
         {
           "type": "build",
-          "name": "dp-win32-rk4-sdl-debug"
+          "name": "win32-rk4-sdl-debug"
         }
       ]
     },
     {
-      "name": "dp-win32-rk4-sdl-release",
-      "displayName": "Windows GCC RK4 SDL Release",
+      "name": "win32-rk4-sdl-release",
+      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe",
       "steps": [
         {
           "type": "configure",
-          "name": "dp-win32-rk4-sdl-release"
+          "name": "win32-rk4-sdl-release"
         },
         {
           "type": "build",
-          "name": "dp-win32-rk4-sdl-release"
+          "name": "win32-rk4-sdl-release"
         }
       ]
     },
     {
-      "name": "dp-posix-rk4-sdl-debug",
-      "displayName": "Linux GCC RK4 SDL Debug",
+      "name": "posix-rk4-sdl-debug",
+      "displayName": "Linux GCC RK4 SDL Debug | ./.build/posix-rk4-sdl-debug/bin/DoublePendulum",
       "steps": [
         {
           "type": "configure",
-          "name": "dp-posix-rk4-sdl-debug"
+          "name": "posix-rk4-sdl-debug"
         },
         {
           "type": "build",
-          "name": "dp-posix-rk4-sdl-debug"
+          "name": "posix-rk4-sdl-debug"
         }
       ]
     },
     {
-      "name": "dp-posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release",
+      "name": "posix-rk4-sdl-release",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
       "steps": [
         {
           "type": "configure",
-          "name": "dp-posix-rk4-sdl-release"
+          "name": "posix-rk4-sdl-release"
         },
         {
           "type": "build",
-          "name": "dp-posix-rk4-sdl-release"
+          "name": "posix-rk4-sdl-release"
         }
       ]
     }
