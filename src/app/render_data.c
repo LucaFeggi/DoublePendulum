@@ -1,6 +1,7 @@
 #include "render_data.h"
 
-#include "../config/config.h"
+#include "../config/render_config.h"
+#include "../config/simulation_config.h"
 
 #include <math.h>
 #include <stdlib.h>

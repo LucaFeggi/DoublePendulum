@@ -1,6 +1,6 @@
 #include "../integrator.h"
 
-#include "../../config/config.h"
+#include "../../config/simulation_config.h"
 #include "../pendulum_equations.h"
 
 static PendulumDerivative rk4_evaluate(

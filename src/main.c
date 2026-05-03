@@ -1,4 +1,5 @@
 #include "app/app.h"
+#include "config/config_validation.h"
 
 #include <stdlib.h>
 

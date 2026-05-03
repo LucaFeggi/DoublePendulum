@@ -1,6 +1,6 @@
 #include "simulation.h"
 
-#include "../config/config.h"
+#include "../config/simulation_config.h"
 
 #include <math.h>
 #include <stdlib.h>

@@ -1,6 +1,6 @@
 #include "trail.h"
 
-#include "../../config/config.h"
+#include "../../config/render_config.h"
 
 #include <math.h>
 #include <stdlib.h>

@@ -32,10 +32,6 @@
 #define SIMULATION_DT (1.0 / (double)SIMULATION_STEPS_PER_SECOND)
 #define SIMULATION_TIME_SCALE 3
 
-#define TOTAL_PENDULUMS 10000
-
-// ----- Performance parameters -----
-
-#define MULTITHREADING_THRESHOLD 1000
+#define TOTAL_PENDULUMS 5
 
 #endif // CONFIG_SIMULATION_CONFIG_H

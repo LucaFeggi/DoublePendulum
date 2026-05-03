@@ -1,12 +1,11 @@
-#ifndef CONFIG_CONFIG_H
-#define CONFIG_CONFIG_H
+#ifndef CONFIG_CONFIG_VALIDATION_H
+#define CONFIG_CONFIG_VALIDATION_H
 
 #include "app_config.h"
 #include "simulation_config.h"
 #include "render_config.h"
 
 _Static_assert(TOTAL_PENDULUMS >= 1, "TOTAL_PENDULUMS must be >= 1");
-_Static_assert(MULTITHREADING_THRESHOLD >= 0, "MULTITHREADING_THRESHOLD must be >= 0");
 
 _Static_assert(PENDULUM_INIT_MODE == 0 || PENDULUM_INIT_MODE == 1, "PENDULUM_INIT_MODE must be 0 or 1");
 
@@ -35,4 +34,4 @@ _Static_assert(TRAIL_FADE_GAMMA_PER_MILLE > 0, "TRAIL_FADE_GAMMA_PER_MILLE must 
 _Static_assert(COLOR_DECAY_PER_MILLE >= 0 && COLOR_DECAY_PER_MILLE <= 1000, "COLOR_DECAY_PER_MILLE must be in [0, 1000]");
 _Static_assert(COLOR_DECAY_REFERENCE_FPS > 0, "COLOR_DECAY_REFERENCE_FPS must be > 0");
 
-#endif // CONFIG_CONFIG_H
+#endif // CONFIG_CONFIG_VALIDATION_H

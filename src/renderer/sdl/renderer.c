@@ -1,6 +1,7 @@
 #include "../renderer.h"
 
-#include "../../config/config.h"
+#include "../../config/render_config.h"
+#include "../../config/simulation_config.h"
 #include "color.h"
 
 #include <math.h>

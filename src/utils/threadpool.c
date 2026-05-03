@@ -1,6 +1,6 @@
 #include "threadpool.h"
 
-#include "../config/config.h"
+#include "../config/app_config.h"
 
 #include <stdlib.h>
 

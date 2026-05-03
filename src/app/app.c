@@ -1,6 +1,7 @@
 #include "app.h"
 
-#include "../config/config.h"
+#include "../config/app_config.h"
+#include "../config/simulation_config.h"
 #include "input.h"
 
 #include <SDL.h>
@@ -17,11 +18,18 @@ typedef struct {
 
 static int app_get_worker_threads(void) {
     int cpu_count = SDL_GetCPUCount();
-    return cpu_count > 1 ? cpu_count - 1 : 1;
-}
+    int max_worker_threads = cpu_count > 1 ? cpu_count - 1 : 0;
+    int active_jobs = (TOTAL_PENDULUMS + THREADPOOL_MIN_ITEMS_PER_JOB - 1) / THREADPOOL_MIN_ITEMS_PER_JOB;
+    int worker_threads = active_jobs - 1;
 
-static bool app_should_use_threadpool(void) {
-    return TOTAL_PENDULUMS > MULTITHREADING_THRESHOLD;
+    if(worker_threads < 0) {
+        worker_threads = 0;
+    }
+    if(worker_threads > max_worker_threads) {
+        worker_threads = max_worker_threads;
+    }
+
+    return worker_threads;
 }
 
 static ThreadPool *app_get_threadpool(App *app) {
@@ -75,8 +83,7 @@ static double app_reduce_max_ang_vel(const double *max_ang_vel_by_job, int count
 
 static bool app_can_parallelize_simulation(const App *app) {
     return app->threadpool_enabled
-        && app->thread_max_ang_vel != NULL
-        && simulation_get_count(&app->simulation) > MULTITHREADING_THRESHOLD;
+        && app->thread_max_ang_vel != NULL;
 }
 
 static void app_update_simulation_steps(App *app, int steps) {
@@ -138,7 +145,7 @@ bool app_init(App *app) {
     fps_init(&app->fps);
 
     int worker_threads = app_get_worker_threads();
-    if(app_should_use_threadpool()) {
+    if(worker_threads > 0) {
         if(!threadpool_init(&app->threadpool, worker_threads)) {
             SDL_Log("ERROR: Failed to initialize threadpool.");
             goto fail_threadpool;
@@ -149,9 +156,6 @@ bool app_init(App *app) {
             SDL_Log("ERROR: Failed to allocate thread-local angular velocity buffer.");
             goto fail_thread_scratch;
         }
-    }
-    else {
-        worker_threads = 0;
     }
 
     bool simulation_success = PENDULUM_INIT_MODE
