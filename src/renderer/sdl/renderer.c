@@ -15,15 +15,15 @@ static bool renderer_trails_enabled(void) {
 
 typedef struct {
     Renderer *renderer;
-    RenderData *render_data;
+    const RenderData *render_data;
     int center_x;
     int center_y;
     float render_len[2];
 } RendererPrepareJob;
 
-static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int end_index) {
+static void renderer_prepare_range(const RendererPrepareJob *job, int start_index, int end_index) {
     Renderer *renderer = job->renderer;
-    RenderData *render_data = job->render_data;
+    const RenderData *render_data = job->render_data;
 
     for(int i = start_index; i < end_index; i++) {
         float len0 = job->render_len[0];
@@ -62,10 +62,10 @@ static void renderer_prepare_range(RendererPrepareJob *job, int start_index, int
 
 static void renderer_prepare_job(void *context, int start_index, int end_index, int worker_id) {
     (void)worker_id;
-    renderer_prepare_range((RendererPrepareJob *)context, start_index, end_index);
+    renderer_prepare_range((const RendererPrepareJob *)context, start_index, end_index);
 }
 
-bool renderer_init(Renderer *renderer, Window *window) {
+bool renderer_init(Renderer *renderer, const Window *window) {
     renderer->win_ptr = window->ptr;
     renderer->ptr = NULL;
     renderer->rod_lines = NULL;
@@ -131,7 +131,7 @@ void renderer_quit(Renderer *renderer) {
     renderer->win_ptr = NULL;
 }
 
-static void renderer_prepare(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h) {
+static void renderer_prepare(Renderer *renderer, const RenderData *render_data, ThreadPool *threadpool, int w, int h) {
     RendererPrepareJob job = {
         .renderer = renderer,
         .render_data = render_data,
@@ -201,7 +201,7 @@ static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     SDL_RenderPresent(renderer->ptr);
 }
 
-void renderer_render(Renderer *renderer, RenderData *render_data, ThreadPool *threadpool, int w, int h, float delta_time) {
+void renderer_render(Renderer *renderer, const RenderData *render_data, ThreadPool *threadpool, int w, int h, float delta_time) {
     renderer_prepare(renderer, render_data, threadpool, w, h);
     renderer_draw(renderer, w, h, delta_time);
 }
