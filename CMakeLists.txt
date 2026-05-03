@@ -159,6 +159,8 @@ set(SDL_STATIC OFF CACHE BOOL "Do not build SDL2 as a static library" FORCE)
 set(SDL_TEST OFF CACHE BOOL "Do not build SDL2_test" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "Do not build SDL2 tests" FORCE)
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "Do not install SDL2 from this project" FORCE)
+message(NOTICE "Configuring SDL2 dependency; this can take a while on a clean configure.")
+message(NOTICE "")
 add_subdirectory("${DP_SDL2_ROOT}" "${CMAKE_BINARY_DIR}/externals/SDL2" EXCLUDE_FROM_ALL)
 
 set(DP_APP_SOURCES

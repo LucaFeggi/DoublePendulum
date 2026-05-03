@@ -12,7 +12,8 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_MESSAGE_LOG_LEVEL": "NOTICE"
       }
     },
     {
