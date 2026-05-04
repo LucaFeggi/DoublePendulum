@@ -5,13 +5,13 @@
 
 #define COLOR_DECAY_PER_MILLE 995
 #define COLOR_DECAY ((double)COLOR_DECAY_PER_MILLE / 1000.0)
-#define COLOR_DECAY_REFERENCE_FPS 60
+#define COLOR_DECAY_REFERENCE_FPS 60 // apply the equivalent of COLOR_DECAY_PER_MILLE every 1/60th of a second
 
-#define ROD_WIDTH_PER_MILLE 1000
+#define ROD_WIDTH_PER_MILLE 2000
 #define ROD_WIDTH_PIXELS ((float)ROD_WIDTH_PER_MILLE / 1000.0f)
 
 #define TRAIL 1
-#define TRAIL_WIDTH_PER_MILLE 1000
+#define TRAIL_WIDTH_PER_MILLE 1500
 #define TRAIL_WIDTH_PIXELS ((float)TRAIL_WIDTH_PER_MILLE / 1000.0f)
 
 // Trail history is split into render-target buckets. New trail segments are

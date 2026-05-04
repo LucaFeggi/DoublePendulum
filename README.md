@@ -179,81 +179,23 @@ Edit `src/config/app_config.h`:
 
 `src/config/config_validation.h` validates these values with `_Static_assert`.
 
-## Implementation Details
+## Technical Notes
 
-### Window Size and Scale
+The implementation is split by responsibility:
 
-The initial window size is hardcoded in `src/app/window.c`: the app uses about two thirds of the current display size, with a fallback of `1280x720` if SDL cannot query the display mode. The minimum window size is one fifth of the initial size, and the window is resizable.
+- `src/app/`: SDL window setup, input, frame timing, and the fixed-step application loop.
+- `src/simulation/`: pendulum state, equations of motion, initialization, and RK4 integration.
+- `src/renderer/sdl/`: SDL rendering, screen-space conversion, rods, trails, and color mapping.
+- `src/config/`: compile-time parameters and validation.
 
-The simulation-to-screen scale is computed in `src/renderer/sdl/renderer.c`. The renderer centers the pendulum at `w / 2, h / 2`, sets `max_rend_len` to one fifth of the smaller window dimension, and scales configured rod lengths relative to the longer configured rod.
+A few design choices are useful to know before changing behavior:
 
-### Physics
-
-Each pendulum stores:
-
-- `PendulumParams`: two rod lengths and two masses.
-- `PendulumState`: two angles and two angular velocities.
-
-`src/simulation/pendulum_equations.c` computes angular accelerations from the current state, masses, lengths, and gravity. It precomputes trigonometric terms and repeated values before evaluating the acceleration equations.
-
-The integrator in `src/simulation/integrators/rk4.c` advances each `PendulumState` with fourth-order Runge-Kutta using the fixed `SIMULATION_DT` from `src/config/simulation_config.h`.
-
-`src/app/app.c` accumulates elapsed frame time, multiplies it by `SIMULATION_TIME_SCALE`, converts the accumulator into fixed simulation steps, and caps the number of steps per frame with `MAX_SIMULATION_STEPS_PER_FRAME`. The cap is derived in `src/config/app_config.h` as `ceil(SIMULATION_STEPS_PER_SECOND * SIMULATION_TIME_SCALE / MIN_SUPPORTED_RENDER_FPS)`.
-
-`src/simulation/simulation.c` initializes `TOTAL_PENDULUMS` states. In both default and custom modes, each pendulum receives an index-based angle offset through the relevant `*_ANGLE_ADDER` macro. This is what makes initially similar pendulums diverge visually.
-
-Positions are derived during renderer preparation rather than stored in the simulation state.
-
-### Rendering
-
-The SDL backend creates an accelerated, vsynced `SDL_Renderer`. If trails are enabled, it also requests target texture support.
-
-For each pendulum, `src/renderer/sdl/renderer.c` converts angles to screen coordinates:
-
-- The pivot is centered in the window.
-- Rod lengths are scaled to the current window size.
-- `x` uses `sin(angle)`.
-- `y` uses `cos(angle)`.
-
-The current renderer draws rods and tip trails.
-
-`src/renderer/sdl/line_batch.c` turns thick line segments into quads and draws them with `SDL_RenderGeometry`. Rods use one batch with two line segments per pendulum.
-
-`src/renderer/sdl/trail.c` stores trail history in multiple render-target textures. New tip segments are drawn into the current bucket, old buckets are rendered with age-based alpha, and expired buckets are cleared.
-
-`src/renderer/sdl/color.c` maps rod speed to a color spectrum. The speed normalization uses the decayed maximum angular velocity tracked in `src/app/render_data.c`.
-
-Each frame clears the backbuffer to black, draws trail buckets if enabled, draws rods, and presents with `SDL_RenderPresent`.
-
-### Application Loop
-
-The main loop in `src/app/app.c` performs this sequence:
-
-1. Poll SDL events with `input_poll`.
-2. Update frame timing with `fps_update`.
-3. Add scaled frame time to the fixed-step accumulator.
-4. Consume and run simulation steps.
-5. Update the window title with render FPS and simulation steps per second.
-6. Pack simulation snapshots into `RenderData`.
-7. Prepare and render the SDL frame.
-
-If the window is minimized or reports a zero render size, the loop calls `SDL_Delay(1)`. Otherwise, pacing is primarily handled by the vsynced SDL renderer.
-
-## Optimizations
-
-The implementation favors clarity and low overhead over complex optimization. Current optimizations include:
-
-- Fixed-step simulation with a per-frame step cap to avoid unbounded catch-up work after slow frames.
-- Simple contiguous arrays for pendulum states and render samples.
-- Optional C11 thread-pool parallelism for simulation updates and renderer preparation.
-- A synchronous `threadpool_parallel_for` where the controlling thread processes one chunk while worker threads process the rest.
-- Renderer data buffers and line batches allocated during initialization, then reused each frame.
-- Thick rods and trails batched through `SDL_RenderGeometry` instead of issuing one draw operation per segment.
-- Trail history stored in render-target buckets so the full path history does not need to be rebuilt from CPU-side point lists every frame.
-- Reuse of trigonometric values during renderer preparation and acceleration calculations.
-- Release builds attempt IPO/LTO when supported by GCC and CMake.
-
-With the current default `TOTAL_PENDULUMS` of `5` and `THREADPOOL_MIN_ITEMS_PER_JOB` of `256`, the app does not create worker threads because the workload is too small to benefit.
+- Simulation advances with fixed `SIMULATION_DT` steps; the app accumulates scaled frame time and caps per-frame catch-up work with `MAX_SIMULATION_STEPS_PER_FRAME`.
+- Positions are derived for rendering instead of stored in the simulation state.
+- Multiple pendulums use index-based initial angle offsets to make chaotic divergence visible.
+- Rods and trails are batched through `SDL_RenderGeometry`.
+- Trail history is stored in render-target texture buckets rather than rebuilt from CPU-side point lists each frame.
+- Worker threads are only useful for larger `TOTAL_PENDULUMS` values; the default workload is intentionally small.
 
 ## Dependencies
 
