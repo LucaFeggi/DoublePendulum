@@ -12,6 +12,7 @@ _Static_assert(PENDULUM_INIT_MODE == 0 || PENDULUM_INIT_MODE == 1, "PENDULUM_INI
 _Static_assert(GRAVITY_CENTI > 0, "GRAVITY_CENTI must be > 0");
 _Static_assert(SIMULATION_STEPS_PER_SECOND > 0, "SIMULATION_STEPS_PER_SECOND must be > 0");
 _Static_assert(SIMULATION_TIME_SCALE > 0, "SIMULATION_TIME_SCALE must be > 0");
+_Static_assert(MIN_SUPPORTED_RENDER_FPS > 0, "MIN_SUPPORTED_RENDER_FPS must be > 0");
 _Static_assert(MAX_SIMULATION_STEPS_PER_FRAME >= 1, "MAX_SIMULATION_STEPS_PER_FRAME must be >= 1");
 
 _Static_assert(DEFAULT_LEN > 0, "DEFAULT_LEN must be > 0");

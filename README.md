@@ -173,7 +173,8 @@ Rod colors are defined in the `spectrum` array in `src/renderer/sdl/color.c`.
 
 Edit `src/config/app_config.h`:
 
-- `MAX_SIMULATION_STEPS_PER_FRAME`: caps fixed simulation steps consumed in one rendered frame.
+- `MIN_SUPPORTED_RENDER_FPS`: lowest render FPS where the app should still try to keep the configured simulation speed before dropping accumulated simulation time.
+- `MAX_SIMULATION_STEPS_PER_FRAME`: derived cap for fixed simulation steps consumed in one rendered frame.
 - `THREADPOOL_MIN_ITEMS_PER_JOB`: controls how many pendulums are needed before the app creates useful worker jobs.
 
 `src/config/config_validation.h` validates these values with `_Static_assert`.
@@ -197,7 +198,7 @@ Each pendulum stores:
 
 The integrator in `src/simulation/integrators/rk4.c` advances each `PendulumState` with fourth-order Runge-Kutta using the fixed `SIMULATION_DT` from `src/config/simulation_config.h`.
 
-`src/app/app.c` accumulates elapsed frame time, multiplies it by `SIMULATION_TIME_SCALE`, converts the accumulator into fixed simulation steps, and caps the number of steps per frame with `MAX_SIMULATION_STEPS_PER_FRAME`.
+`src/app/app.c` accumulates elapsed frame time, multiplies it by `SIMULATION_TIME_SCALE`, converts the accumulator into fixed simulation steps, and caps the number of steps per frame with `MAX_SIMULATION_STEPS_PER_FRAME`. The cap is derived in `src/config/app_config.h` as `ceil(SIMULATION_STEPS_PER_SECOND * SIMULATION_TIME_SCALE / MIN_SUPPORTED_RENDER_FPS)`.
 
 `src/simulation/simulation.c` initializes `TOTAL_PENDULUMS` states. In both default and custom modes, each pendulum receives an index-based angle offset through the relevant `*_ANGLE_ADDER` macro. This is what makes initially similar pendulums diverge visually.
 
