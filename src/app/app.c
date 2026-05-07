@@ -202,6 +202,13 @@ void app_run(App *app) {
         }
 
         fps_update(&app->fps);
+
+        if(window_is_minimized(&app->window)) {
+            app->fps.accumulator = 0.0;
+            SDL_Delay(16);
+            continue;
+        }
+
         app->fps.accumulator += app->fps.delta_time * SIMULATION_TIME_SCALE;
 
         int steps = app_consume_simulation_steps(&app->fps);
@@ -213,19 +220,17 @@ void app_run(App *app) {
         int w;
         int h;
         window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_steps_per_second);
+
         if(window_get_render_size(&app->window, &w, &h)) {
             render_data_pack(&app->render_data, &app->simulation, (float)app->fps.delta_time);
             renderer_render(&app->renderer, &app->render_data, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
-
-            if(window_is_minimized(&app->window)) {
-                SDL_Delay(1);
-            }
         }
         else {
-            SDL_Delay(1);
+            SDL_Delay(16);
         }
     }
 }
+
 
 void app_quit(App *app) {
     renderer_quit(&app->renderer);
