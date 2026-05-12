@@ -16,7 +16,7 @@ bool render_data_init(RenderData *rd, const Simulation *sim) {
         return false;
     }
 
-    simulation_fill_render_samples(sim, rd->pen_data, TOTAL_PENDULUMS);
+    simulation_fill_render_samples(sim, rd->pen_data, (size_t)TOTAL_PENDULUMS);
     return true;
 }
 
@@ -48,5 +48,5 @@ void render_data_pack(RenderData *rd, const Simulation *sim, float delta_time) {
         ? current_max_ang_vel
         : decayed_max_ang_vel;
 
-    simulation_fill_render_samples(sim, rd->pen_data, TOTAL_PENDULUMS);
+    simulation_fill_render_samples(sim, rd->pen_data, (size_t)TOTAL_PENDULUMS);
 }

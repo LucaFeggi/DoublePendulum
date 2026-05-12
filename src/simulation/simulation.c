@@ -28,12 +28,13 @@ static bool simulation_init_from_spec(Simulation *simulation, const SimulationIn
     simulation->max_ang_vel = simulation_compute_initial_max_ang_vel(spec->ang_vel);
     simulation->state = NULL;
 
-    simulation->state = (PendulumState *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumState));
+    const size_t pendulum_count = (size_t)TOTAL_PENDULUMS;
+    simulation->state = (PendulumState *)malloc(pendulum_count * sizeof(PendulumState));
     if(simulation->state == NULL) {
         return false;
     }
 
-    for(int i = 0; i < TOTAL_PENDULUMS; ++i) {
+    for(size_t i = 0; i < pendulum_count; ++i) {
         pendulum_state_init(
             &simulation->state[i],
             spec->angle[0] + spec->angle_adder[0] * (double)i,
@@ -76,19 +77,17 @@ bool simulation_init_default(Simulation *simulation) {
 
 double simulation_update_range(
     Simulation *simulation,
-    int start_index,
-    int end_index,
+    size_t start_index,
+    size_t end_index,
     int steps
 ) {
     if(!simulation || !simulation->state || steps <= 0) {
         return 0.0;
     }
 
-    if(start_index < 0) {
-        start_index = 0;
-    }
-    if(end_index > TOTAL_PENDULUMS) {
-        end_index = TOTAL_PENDULUMS;
+    const size_t pendulum_count = (size_t)TOTAL_PENDULUMS;
+    if(end_index > pendulum_count) {
+        end_index = pendulum_count;
     }
     if(start_index >= end_index) {
         return 0.0;
@@ -96,7 +95,7 @@ double simulation_update_range(
 
     double local_max_ang_vel = 0.0;
 
-    for(int i = start_index; i < end_index; ++i) {
+    for(size_t i = start_index; i < end_index; ++i) {
         for(int step = 0; step < steps; ++step) {
             pendulum_update(&simulation->state[i], &simulation->params);
         }
@@ -115,19 +114,20 @@ void simulation_update_steps(Simulation *simulation, int steps) {
         return;
     }
 
-    simulation->max_ang_vel = simulation_update_range(simulation, 0, TOTAL_PENDULUMS, steps);
+    simulation->max_ang_vel = simulation_update_range(simulation, (size_t)0, (size_t)TOTAL_PENDULUMS, steps);
 }
 
-void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, int count) {
-    if(!simulation || !simulation->state || !out || count <= 0) {
+void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, size_t count) {
+    if(!simulation || !simulation->state || !out || count == 0) {
         return;
     }
 
-    if(count > TOTAL_PENDULUMS) {
-        count = TOTAL_PENDULUMS;
+    const size_t pendulum_count = (size_t)TOTAL_PENDULUMS;
+    if(count > pendulum_count) {
+        count = pendulum_count;
     }
 
-    for(int i = 0; i < count; ++i) {
+    for(size_t i = 0; i < count; ++i) {
         out[i].angle[0] = (float)simulation->state[i].angle[0];
         out[i].angle[1] = (float)simulation->state[i].angle[1];
         out[i].ang_vel[0] = (float)simulation->state[i].ang_vel[0];
@@ -141,8 +141,8 @@ void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel) {
     }
 }
 
-int simulation_get_count(const Simulation *simulation) {
-    return simulation && simulation->state ? TOTAL_PENDULUMS : 0;
+size_t simulation_get_count(const Simulation *simulation) {
+    return simulation && simulation->state ? (size_t)TOTAL_PENDULUMS : (size_t)0;
 }
 
 double simulation_get_len(const Simulation *simulation, int rod_index) {

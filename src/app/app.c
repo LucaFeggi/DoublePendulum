@@ -18,18 +18,19 @@ typedef struct {
 
 static int app_get_worker_threads(void) {
     int cpu_count = SDL_GetCPUCount();
-    int max_worker_threads = cpu_count > 1 ? cpu_count - 1 : 0;
-    int active_jobs = (TOTAL_PENDULUMS + THREADPOOL_MIN_ITEMS_PER_JOB - 1) / THREADPOOL_MIN_ITEMS_PER_JOB;
-    int worker_threads = active_jobs - 1;
+    int max_worker_threads = cpu_count > 1 ? cpu_count - 1 : 1;
+    size_t pendulum_count = (size_t)TOTAL_PENDULUMS;
+    size_t min_items = (size_t)THREADPOOL_MIN_ITEMS_PER_JOB;
+    size_t useful_workers = pendulum_count / min_items + ((pendulum_count % min_items) != 0);
 
-    if(worker_threads < 0) {
-        worker_threads = 0;
+    if(useful_workers < 1) {
+        useful_workers = 1;
     }
-    if(worker_threads > max_worker_threads) {
-        worker_threads = max_worker_threads;
+    if(useful_workers > (size_t)max_worker_threads) {
+        useful_workers = (size_t)max_worker_threads;
     }
 
-    return worker_threads;
+    return (int)useful_workers;
 }
 
 static ThreadPool *app_get_threadpool(App *app) {
@@ -44,7 +45,7 @@ static bool app_init_thread_scratch(App *app, int worker_threads) {
         return true;
     }
 
-    int capacity = worker_threads + 1;
+    int capacity = worker_threads;
     app->thread_max_ang_vel = (double *)calloc((size_t)capacity, sizeof(double));
     if(!app->thread_max_ang_vel) {
         return false;
@@ -60,7 +61,7 @@ static void app_free_thread_scratch(App *app) {
     app->thread_max_capacity = 0;
 }
 
-static void app_simulation_update_job(void *context, int start_index, int end_index, int worker_id) {
+static void app_simulation_update_job(void *context, size_t start_index, size_t end_index, int worker_id) {
     AppSimulationUpdateJob *job = (AppSimulationUpdateJob *)context;
     double max_ang_vel = simulation_update_range(job->simulation, start_index, end_index, job->steps);
 
@@ -81,41 +82,41 @@ static double app_reduce_max_ang_vel(const double *max_ang_vel_by_job, int count
     return max_ang_vel;
 }
 
+static void app_clear_thread_scratch(double *values, int count) {
+    for(int i = 0; i < count; ++i) {
+        values[i] = 0.0;
+    }
+}
+
 static bool app_can_parallelize_simulation(const App *app) {
     return app->threadpool_enabled
         && app->thread_max_ang_vel != NULL;
 }
 
 static void app_update_simulation_steps(App *app, int steps) {
-    if(steps <= 0) {
+    if(steps <= 0 || !app_can_parallelize_simulation(app)) {
         return;
     }
 
-    if(app_can_parallelize_simulation(app)) {
-        AppSimulationUpdateJob job = {
-            .simulation = &app->simulation,
-            .steps = steps,
-            .thread_max_ang_vel = app->thread_max_ang_vel,
-            .thread_max_capacity = app->thread_max_capacity
-        };
+    AppSimulationUpdateJob job = {
+        .simulation = &app->simulation,
+        .steps = steps,
+        .thread_max_ang_vel = app->thread_max_ang_vel,
+        .thread_max_capacity = app->thread_max_capacity
+    };
 
-        int active_jobs = threadpool_parallel_for(
-            &app->threadpool,
-            simulation_get_count(&app->simulation),
-            app_simulation_update_job,
-            &job
-        );
+    app_clear_thread_scratch(app->thread_max_ang_vel, app->thread_max_capacity);
 
-        if(active_jobs > 0) {
-            if(active_jobs > app->thread_max_capacity) {
-                active_jobs = app->thread_max_capacity;
-            }
-            simulation_set_max_ang_vel(&app->simulation, app_reduce_max_ang_vel(app->thread_max_ang_vel, active_jobs));
-            return;
-        }
+    int active_jobs = threadpool_parallel_for(
+        &app->threadpool,
+        simulation_get_count(&app->simulation),
+        app_simulation_update_job,
+        &job
+    );
+
+    if(active_jobs > 0) {
+        simulation_set_max_ang_vel(&app->simulation, app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity));
     }
-
-    simulation_update_steps(&app->simulation, steps);
 }
 
 static int app_consume_simulation_steps(Fps *fps) {

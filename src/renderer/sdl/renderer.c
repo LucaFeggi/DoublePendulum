@@ -21,11 +21,11 @@ typedef struct {
     float render_len[2];
 } RendererPrepareJob;
 
-static void renderer_prepare_range(const RendererPrepareJob *job, int start_index, int end_index) {
+static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_index, size_t end_index) {
     Renderer *renderer = job->renderer;
     const RenderData *render_data = job->render_data;
 
-    for(int i = start_index; i < end_index; i++) {
+    for(size_t i = start_index; i < end_index; i++) {
         float len0 = job->render_len[0];
         float len1 = job->render_len[1];
         PendulumTrig trig = {
@@ -60,7 +60,7 @@ static void renderer_prepare_range(const RendererPrepareJob *job, int start_inde
     }
 }
 
-static void renderer_prepare_job(void *context, int start_index, int end_index, int worker_id) {
+static void renderer_prepare_job(void *context, size_t start_index, size_t end_index, int worker_id) {
     (void)worker_id;
     renderer_prepare_range((const RendererPrepareJob *)context, start_index, end_index);
 }
@@ -147,10 +147,10 @@ static void renderer_prepare(Renderer *renderer, const RenderData *render_data, 
     job.render_len[1] = render_data->len[1] * render_scale;
 
     if(threadpool != NULL) {
-        threadpool_parallel_for(threadpool, TOTAL_PENDULUMS, renderer_prepare_job, &job);
+        threadpool_parallel_for(threadpool, (size_t)TOTAL_PENDULUMS, renderer_prepare_job, &job);
     }
     else {
-        renderer_prepare_range(&job, 0, TOTAL_PENDULUMS);
+        renderer_prepare_range(&job, (size_t)0, (size_t)TOTAL_PENDULUMS);
     }
 }
 
