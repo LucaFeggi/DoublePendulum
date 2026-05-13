@@ -93,14 +93,13 @@ static bool app_can_parallelize_simulation(const App *app) {
         && app->thread_max_ang_vel != NULL;
 }
 
-static void app_update_simulation_steps(App *app, int steps) {
+static double app_update_simulation_steps(App *app, int steps) {
     if(steps <= 0) {
-        return;
+        return (double)app->render_data.max_ang_vel;
     }
 
     if(!app_can_parallelize_simulation(app)) {
-        app->current_max_ang_vel = simulation_update_steps(&app->simulation, steps);
-        return;
+        return simulation_update_steps(&app->simulation, steps);
     }
 
     AppSimulationUpdateJob job = {
@@ -120,8 +119,10 @@ static void app_update_simulation_steps(App *app, int steps) {
     );
 
     if(active_jobs > 0) {
-        app->current_max_ang_vel = app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity);
+        return app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity);
     }
+
+    return (double)app->render_data.max_ang_vel;
 }
 
 static int app_consume_simulation_steps(Fps *fps) {
@@ -140,7 +141,6 @@ static int app_consume_simulation_steps(Fps *fps) {
 
 bool app_init(App *app) {
     app->threadpool_enabled = false;
-    app->current_max_ang_vel = 0.0;
     app->thread_max_ang_vel = NULL;
     app->thread_max_capacity = 0;
 
@@ -175,7 +175,6 @@ bool app_init(App *app) {
     }
     if(!window_init(&app->window)) goto fail_window;
     if(!render_data_init(&app->render_data, &app->simulation)) goto fail_render_data;
-    app->current_max_ang_vel = (double)app->render_data.max_ang_vel;
     if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
 
     window_show(&app->window);
@@ -220,8 +219,9 @@ void app_run(App *app) {
         app->fps.accumulator += app->fps.delta_time * SIMULATION_TIME_SCALE;
 
         int steps = app_consume_simulation_steps(&app->fps);
+        float current_max_ang_vel = app->render_data.max_ang_vel;
         if(steps > 0) {
-            app_update_simulation_steps(app, steps);
+            current_max_ang_vel = (float)app_update_simulation_steps(app, steps);
             app->fps.sim_steps += (uint64_t)steps;
         }
 
@@ -230,7 +230,7 @@ void app_run(App *app) {
         window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_steps_per_second);
 
         if(window_get_render_size(&app->window, &w, &h)) {
-            render_data_pack(&app->render_data, &app->simulation, (float)app->current_max_ang_vel, (float)app->fps.delta_time);
+            render_data_pack(&app->render_data, &app->simulation, current_max_ang_vel, (float)app->fps.delta_time);
             renderer_render(&app->renderer, &app->render_data, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
         }
         else {
