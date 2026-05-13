@@ -58,7 +58,7 @@ void color_get_double_pendulum(
     const PendulumRenderSample *pen,
     const float len[2],
     float max_ang_vel,
-    const PendulumTrig *trig,
+    const PendulumRenderTrig *trig,
     SDL_Color color[2]
 ) {
     if(color == NULL) {
@@ -71,7 +71,7 @@ void color_get_double_pendulum(
         return;
     }
 
-    PendulumTrig local_trig;
+    PendulumRenderTrig local_trig;
     if(trig == NULL) {
         local_trig.sin0 = sinf(pen->angle[0]);
         local_trig.cos0 = cosf(pen->angle[0]);

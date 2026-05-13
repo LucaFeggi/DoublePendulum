@@ -28,7 +28,7 @@ static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_i
     for(size_t i = start_index; i < end_index; i++) {
         float len0 = job->render_len[0];
         float len1 = job->render_len[1];
-        PendulumTrig trig = {
+        PendulumRenderTrig trig = {
             .sin0 = sinf(render_data->pen_data[i].angle[0]),
             .cos0 = cosf(render_data->pen_data[i].angle[0]),
             .sin1 = sinf(render_data->pen_data[i].angle[1]),

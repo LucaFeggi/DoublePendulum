@@ -15,6 +15,6 @@ typedef struct {
     LineBatch rod_batch;
     TrailLayer trail;
     bool trail_enabled;
-}Renderer;
+} Renderer;
 
 #endif // RENDERER_SDL_RENDERER_BACKEND_H
