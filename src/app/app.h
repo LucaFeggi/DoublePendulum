@@ -3,8 +3,8 @@
 
 #include "fps.h"
 #include "window.h"
-#include "render_data.h"
 
+#include "../renderer/render_frame.h"
 #include "../renderer/renderer.h"
 #include "../simulation/simulation.h"
 #include "../utils/threadpool.h"
@@ -19,7 +19,7 @@ typedef struct {
     int thread_max_capacity;
     Simulation simulation;
     Window window;
-    RenderData render_data;
+    RenderFrame render_frame;
     Renderer renderer;
 } App;
 

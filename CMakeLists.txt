@@ -86,10 +86,7 @@ set(DP_USE_MINGW_C11THREADS OFF)
 if(WIN32 AND MINGW)
     # MinGW-w64 does not reliably provide C11 <threads.h>; use c11threads as a generated build-tree compatibility header.
     set(DP_USE_MINGW_C11THREADS ON)
-    set(DP_C11THREADS_GIT_TAG "master" CACHE STRING "jtsiomb/c11threads revision with native Win32 support")
-    if(DP_C11THREADS_GIT_TAG STREQUAL "e3d46ff")
-        set(DP_C11THREADS_GIT_TAG "master" CACHE STRING "jtsiomb/c11threads revision with native Win32 support" FORCE)
-    endif()
+    set(DP_C11THREADS_GIT_TAG "ec95e1aa82079aefe109d18e5069b79711692064" CACHE STRING "Pinned jtsiomb/c11threads revision with native Win32 support")
 
     include(FetchContent)
     FetchContent_Declare(c11threads
@@ -168,7 +165,6 @@ set(DP_APP_SOURCES
     src/app/app.c
     src/app/fps.c
     src/app/input.c
-    src/app/render_data.c
     src/app/window.c
 )
 
@@ -176,6 +172,10 @@ set(DP_SIMULATION_SOURCES
     src/simulation/pendulum.c
     src/simulation/pendulum_equations.c
     src/simulation/simulation.c
+)
+
+set(DP_RENDERER_CORE_SOURCES
+    src/renderer/render_frame.c
 )
 
 if(DP_INTEGRATOR STREQUAL "rk4")
@@ -199,6 +199,7 @@ add_executable(DoublePendulum)
 target_sources(DoublePendulum PRIVATE
     ${DP_APP_SOURCES}
     ${DP_SIMULATION_SOURCES}
+    ${DP_RENDERER_CORE_SOURCES}
     ${DP_INTEGRATOR_SOURCES}
     ${DP_RENDERER_SOURCES}
     ${DP_C11_THREADS_TARGET_SOURCES}

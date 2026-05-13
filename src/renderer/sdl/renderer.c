@@ -15,7 +15,7 @@ static bool renderer_trails_enabled(void) {
 
 typedef struct {
     Renderer *renderer;
-    const RenderData *render_data;
+    const RenderFrame *render_frame;
     int center_x;
     int center_y;
     float render_len[2];
@@ -23,16 +23,16 @@ typedef struct {
 
 static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_index, size_t end_index) {
     Renderer *renderer = job->renderer;
-    const RenderData *render_data = job->render_data;
+    const RenderFrame *render_frame = job->render_frame;
 
     for(size_t i = start_index; i < end_index; i++) {
         float len0 = job->render_len[0];
         float len1 = job->render_len[1];
         PendulumRenderTrig trig = {
-            .sin0 = sinf(render_data->pen_data[i].angle[0]),
-            .cos0 = cosf(render_data->pen_data[i].angle[0]),
-            .sin1 = sinf(render_data->pen_data[i].angle[1]),
-            .cos1 = cosf(render_data->pen_data[i].angle[1])
+            .sin0 = sinf(render_frame->pen_data[i].angle[0]),
+            .cos0 = cosf(render_frame->pen_data[i].angle[0]),
+            .sin1 = sinf(render_frame->pen_data[i].angle[1]),
+            .cos1 = cosf(render_frame->pen_data[i].angle[1])
         };
 
         int x0 = job->center_x + (int)(len0 * trig.sin0);
@@ -42,7 +42,7 @@ static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_i
         int y1 = y0 + (int)(len1 * trig.cos1);
 
         SDL_Color color[2];
-        color_get_double_pendulum(&render_data->pen_data[i], render_data->len, render_data->max_ang_vel, &trig, color);
+        color_get_double_pendulum(&render_frame->pen_data[i], render_frame->len, render_frame->max_ang_vel, &trig, color);
 
         PreparedRodLine *rod0 =
             &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
@@ -136,20 +136,20 @@ void renderer_quit(Renderer *renderer) {
     renderer->win_ptr = NULL;
 }
 
-static void renderer_prepare(Renderer *renderer, const RenderData *render_data, ThreadPool *threadpool, int w, int h) {
+static void renderer_prepare(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w, int h) {
     RendererPrepareJob job = {
         .renderer = renderer,
-        .render_data = render_data,
+        .render_frame = render_frame,
         .center_x = w / 2,
         .center_y = h / 2
     };
 
     float max_rend_len = (w < h) ? w / 5.0f : h / 5.0f;
-    float render_scale = render_data->max_len > 0.0f
-        ? max_rend_len / render_data->max_len
+    float render_scale = render_frame->max_len > 0.0f
+        ? max_rend_len / render_frame->max_len
         : 0.0f;
-    job.render_len[0] = render_data->len[0] * render_scale;
-    job.render_len[1] = render_data->len[1] * render_scale;
+    job.render_len[0] = render_frame->len[0] * render_scale;
+    job.render_len[1] = render_frame->len[1] * render_scale;
 
     if(threadpool != NULL) {
         threadpool_parallel_for(threadpool, (size_t)TOTAL_PENDULUMS, renderer_prepare_job, &job);
@@ -209,7 +209,7 @@ static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     SDL_RenderPresent(renderer->ptr);
 }
 
-void renderer_render(Renderer *renderer, const RenderData *render_data, ThreadPool *threadpool, int w, int h, float delta_time) {
-    renderer_prepare(renderer, render_data, threadpool, w, h);
+void renderer_render(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w, int h, float delta_time) {
+    renderer_prepare(renderer, render_frame, threadpool, w, h);
     renderer_draw(renderer, w, h, delta_time);
 }

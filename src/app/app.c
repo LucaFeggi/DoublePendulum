@@ -95,7 +95,7 @@ static bool app_can_parallelize_simulation(const App *app) {
 
 static double app_update_simulation_steps(App *app, int steps) {
     if(steps <= 0) {
-        return (double)app->render_data.max_ang_vel;
+        return (double)app->render_frame.max_ang_vel;
     }
 
     if(!app_can_parallelize_simulation(app)) {
@@ -122,7 +122,7 @@ static double app_update_simulation_steps(App *app, int steps) {
         return app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity);
     }
 
-    return (double)app->render_data.max_ang_vel;
+    return (double)app->render_frame.max_ang_vel;
 }
 
 static int app_consume_simulation_steps(Fps *fps) {
@@ -174,15 +174,15 @@ bool app_init(App *app) {
         goto fail_simulation;
     }
     if(!window_init(&app->window)) goto fail_window;
-    if(!render_data_init(&app->render_data, &app->simulation)) goto fail_render_data;
+    if(!render_frame_init(&app->render_frame, &app->simulation)) goto fail_render_frame;
     if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
 
     window_show(&app->window);
     return true;
 
 fail_renderer:
-    render_data_quit(&app->render_data);
-fail_render_data:
+    render_frame_quit(&app->render_frame);
+fail_render_frame:
     window_quit(&app->window);
 fail_window:
     simulation_quit(&app->simulation);
@@ -219,7 +219,7 @@ void app_run(App *app) {
         app->fps.accumulator += app->fps.delta_time * SIMULATION_TIME_SCALE;
 
         int steps = app_consume_simulation_steps(&app->fps);
-        float current_max_ang_vel = app->render_data.max_ang_vel;
+        float current_max_ang_vel = app->render_frame.max_ang_vel;
         if(steps > 0) {
             current_max_ang_vel = (float)app_update_simulation_steps(app, steps);
             app->fps.sim_steps += (uint64_t)steps;
@@ -230,8 +230,8 @@ void app_run(App *app) {
         window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_steps_per_second);
 
         if(window_get_render_size(&app->window, &w, &h)) {
-            render_data_pack(&app->render_data, &app->simulation, current_max_ang_vel, (float)app->fps.delta_time);
-            renderer_render(&app->renderer, &app->render_data, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
+            render_frame_pack(&app->render_frame, &app->simulation, current_max_ang_vel, (float)app->fps.delta_time);
+            renderer_render(&app->renderer, &app->render_frame, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
         }
         else {
             SDL_Delay(16);
@@ -242,7 +242,7 @@ void app_run(App *app) {
 
 void app_quit(App *app) {
     renderer_quit(&app->renderer);
-    render_data_quit(&app->render_data);
+    render_frame_quit(&app->render_frame);
     window_quit(&app->window);
     simulation_quit(&app->simulation);
     app_free_thread_scratch(app);

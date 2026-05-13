@@ -1,7 +1,7 @@
 #ifndef RENDERER_SDL_COLOR_H
 #define RENDERER_SDL_COLOR_H
 
-#include "../../app/render_data.h"
+#include "../render_frame.h"
 
 #include "SDL.h"
 
