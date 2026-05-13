@@ -3,12 +3,8 @@
 #include "../../config/simulation_config.h"
 #include "../pendulum_equations.h"
 
-static PendulumDerivative rk4_evaluate(
-    const PendulumParams *params,
-    PendulumState state,
-    double dt,
-    PendulumDerivative derivative
-) {
+static PendulumDerivative rk4_evaluate(const PendulumParams *params, PendulumState state, double dt,
+                                       PendulumDerivative derivative) {
     PendulumState next_state;
     next_state.angle[0] = state.angle[0] + derivative.d_angle[0] * dt;
     next_state.angle[1] = state.angle[1] + derivative.d_angle[1] * dt;

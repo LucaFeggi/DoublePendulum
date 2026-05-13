@@ -61,7 +61,7 @@ bool line_batch_add(LineBatch *batch, float x0, float y0, float x1, float y1, fl
     }
 
     if(batch->vertex_count + LINE_BATCH_VERTICES_PER_LINE > batch->line_capacity * LINE_BATCH_VERTICES_PER_LINE
-        || batch->index_count + LINE_BATCH_INDICES_PER_LINE > batch->line_capacity * LINE_BATCH_INDICES_PER_LINE) {
+       || batch->index_count + LINE_BATCH_INDICES_PER_LINE > batch->line_capacity * LINE_BATCH_INDICES_PER_LINE) {
         return false;
     }
 
@@ -109,12 +109,6 @@ bool line_batch_draw(const LineBatch *batch, SDL_Renderer *renderer) {
         return true;
     }
 
-    return SDL_RenderGeometry(
-        renderer,
-        NULL,
-        batch->vertices,
-        batch->vertex_count,
-        batch->indices,
-        batch->index_count
-    ) == 0;
+    return SDL_RenderGeometry(renderer, NULL, batch->vertices, batch->vertex_count, batch->indices, batch->index_count)
+           == 0;
 }

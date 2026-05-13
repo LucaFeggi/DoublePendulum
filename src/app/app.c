@@ -89,8 +89,7 @@ static void app_clear_thread_scratch(double *values, int count) {
 }
 
 static bool app_can_parallelize_simulation(const App *app) {
-    return app->threadpool_enabled
-        && app->thread_max_ang_vel != NULL;
+    return app->threadpool_enabled && app->thread_max_ang_vel != NULL;
 }
 
 static double app_update_simulation_steps(App *app, int steps) {
@@ -102,21 +101,15 @@ static double app_update_simulation_steps(App *app, int steps) {
         return simulation_update_steps(&app->simulation, steps);
     }
 
-    AppSimulationUpdateJob job = {
-        .simulation = &app->simulation,
-        .steps = steps,
-        .thread_max_ang_vel = app->thread_max_ang_vel,
-        .thread_max_capacity = app->thread_max_capacity
-    };
+    AppSimulationUpdateJob job = { .simulation = &app->simulation,
+                                   .steps = steps,
+                                   .thread_max_ang_vel = app->thread_max_ang_vel,
+                                   .thread_max_capacity = app->thread_max_capacity };
 
     app_clear_thread_scratch(app->thread_max_ang_vel, app->thread_max_capacity);
 
-    int active_jobs = threadpool_parallel_for(
-        &app->threadpool,
-        simulation_get_count(&app->simulation),
-        app_simulation_update_job,
-        &job
-    );
+    int active_jobs = threadpool_parallel_for(&app->threadpool, simulation_get_count(&app->simulation),
+                                              app_simulation_update_job, &job);
 
     if(active_jobs > 0) {
         return app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity);
@@ -165,17 +158,19 @@ bool app_init(App *app) {
         }
     }
 
-    bool simulation_success = PENDULUM_INIT_MODE
-        ? simulation_init_custom(&app->simulation)
-        : simulation_init_default(&app->simulation);
+    bool simulation_success =
+        PENDULUM_INIT_MODE ? simulation_init_custom(&app->simulation) : simulation_init_default(&app->simulation);
 
     if(!simulation_success) {
         SDL_Log("ERROR: Failed to initialize simulation.");
         goto fail_simulation;
     }
-    if(!window_init(&app->window)) goto fail_window;
-    if(!render_frame_init(&app->render_frame, &app->simulation)) goto fail_render_frame;
-    if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
+    if(!window_init(&app->window))
+        goto fail_window;
+    if(!render_frame_init(&app->render_frame, &app->simulation))
+        goto fail_render_frame;
+    if(!renderer_init(&app->renderer, &app->window))
+        goto fail_renderer;
 
     window_show(&app->window);
     return true;
@@ -231,14 +226,14 @@ void app_run(App *app) {
 
         if(window_get_render_size(&app->window, &w, &h)) {
             render_frame_pack(&app->render_frame, &app->simulation, current_max_ang_vel, (float)app->fps.delta_time);
-            renderer_render(&app->renderer, &app->render_frame, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
+            renderer_render(&app->renderer, &app->render_frame, app_get_threadpool(app), w, h,
+                            (float)app->fps.delta_time);
         }
         else {
             SDL_Delay(16);
         }
     }
 }
-
 
 void app_quit(App *app) {
     renderer_quit(&app->renderer);

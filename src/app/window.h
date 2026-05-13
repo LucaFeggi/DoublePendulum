@@ -5,10 +5,10 @@
 
 #include <SDL.h>
 
-typedef struct{
+typedef struct {
     SDL_Window *ptr;
-    double title_timer;  // accumulates time for FPS title update
-}Window;
+    double title_timer; // accumulates time for FPS title update
+} Window;
 
 bool window_init(Window *window);
 void window_quit(Window *window);

@@ -99,8 +99,10 @@ static void threadpool_cleanup(ThreadPool *threadpool) {
 }
 
 bool threadpool_init(ThreadPool *threadpool, int num_threads) {
-    if(!threadpool) return false;
-    if(num_threads < 1) num_threads = 1;
+    if(!threadpool)
+        return false;
+    if(num_threads < 1)
+        num_threads = 1;
 
     threadpool->threads = NULL;
     threadpool->workers = NULL;
@@ -171,7 +173,8 @@ bool threadpool_init(ThreadPool *threadpool, int num_threads) {
 }
 
 int threadpool_parallel_for(ThreadPool *threadpool, size_t count, ThreadPoolJobFn job_fn, void *job_context) {
-    if(!threadpool || !threadpool->initialized || !job_fn || count == 0) return 0;
+    if(!threadpool || !threadpool->initialized || !job_fn || count == 0)
+        return 0;
 
     mtx_lock(&threadpool->lock);
     if(threadpool->shutdown || threadpool->num_threads <= 0) {
@@ -218,12 +221,14 @@ int threadpool_parallel_for(ThreadPool *threadpool, size_t count, ThreadPoolJobF
 }
 
 int threadpool_get_num_threads(const ThreadPool *threadpool) {
-    if(!threadpool || !threadpool->initialized) return 0;
+    if(!threadpool || !threadpool->initialized)
+        return 0;
     return threadpool->num_threads;
 }
 
 bool threadpool_quit(ThreadPool *threadpool) {
-    if(!threadpool || !threadpool->initialized) return false;
+    if(!threadpool || !threadpool->initialized)
+        return false;
 
     mtx_lock(&threadpool->lock);
     threadpool->shutdown = true;

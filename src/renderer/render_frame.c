@@ -20,8 +20,10 @@ static float render_frame_compute_max_ang_vel(const PendulumRenderSample *sample
     for(size_t i = 0; i < count; ++i) {
         float v0 = fabsf(samples[i].ang_vel[0]);
         float v1 = fabsf(samples[i].ang_vel[1]);
-        if(v0 > max_ang_vel) max_ang_vel = v0;
-        if(v1 > max_ang_vel) max_ang_vel = v1;
+        if(v0 > max_ang_vel)
+            max_ang_vel = v0;
+        if(v1 > max_ang_vel)
+            max_ang_vel = v1;
     }
 
     return max_ang_vel;
@@ -65,9 +67,7 @@ static float render_frame_color_decay_for_delta_time(float delta_time) {
 
 void render_frame_pack(RenderFrame *rf, const Simulation *sim, float current_max_ang_vel, float delta_time) {
     float decayed_max_ang_vel = rf->max_ang_vel * render_frame_color_decay_for_delta_time(delta_time);
-    rf->max_ang_vel = current_max_ang_vel > decayed_max_ang_vel
-        ? current_max_ang_vel
-        : decayed_max_ang_vel;
+    rf->max_ang_vel = current_max_ang_vel > decayed_max_ang_vel ? current_max_ang_vel : decayed_max_ang_vel;
 
     simulation_fill_render_samples(sim, rf->pen_data, (size_t)TOTAL_PENDULUMS);
 }

@@ -5,14 +5,14 @@
 #define SPECTRUM_STAGES 8
 
 static const SDL_Color spectrum[SPECTRUM_STAGES] = {
-    {255, 56,    0, 255},   // Late M Deep Red
-    {255, 204, 111, 255},   // M-type Orange-Red
-    {255, 210, 161, 255},   // K-type Light Orange
-    {255, 244, 234, 255},   // G-type Yellow-White
-    {248, 247, 255, 255},   // F-type Pale Yellow-White
-    {202, 215, 255, 255},   // A-type White
-    {170, 191, 255, 255},   // B-type Blue-White
-    {155, 176, 255, 255}    // O-type Blue
+    { 255, 56, 0, 255 },    // Late M Deep Red
+    { 255, 204, 111, 255 }, // M-type Orange-Red
+    { 255, 210, 161, 255 }, // K-type Light Orange
+    { 255, 244, 234, 255 }, // G-type Yellow-White
+    { 248, 247, 255, 255 }, // F-type Pale Yellow-White
+    { 202, 215, 255, 255 }, // A-type White
+    { 170, 191, 255, 255 }, // B-type Blue-White
+    { 155, 176, 255, 255 }  // O-type Blue
 };
 
 static float color_clamp_unit(float t) {
@@ -54,13 +54,8 @@ static SDL_Color color_map(float t) {
     return color_interpolate(spectrum[idx], spectrum[idx + 1], frac);
 }
 
-void color_get_double_pendulum(
-    const PendulumRenderSample *pen,
-    const float len[2],
-    float max_ang_vel,
-    const PendulumRenderTrig *trig,
-    SDL_Color color[2]
-) {
+void color_get_double_pendulum(const PendulumRenderSample *pen, const float len[2], float max_ang_vel,
+                               const PendulumRenderTrig *trig, SDL_Color color[2]) {
     if(color == NULL) {
         return;
     }

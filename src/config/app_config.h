@@ -9,7 +9,7 @@
 
 // Max fixed simulation steps processed before a frame is rendered.
 // Derived as ceil(SIMULATION_STEPS_PER_SECOND * SIMULATION_TIME_SCALE / MIN_SUPPORTED_RENDER_FPS).
-#define MAX_SIMULATION_STEPS_PER_FRAME \
+#define MAX_SIMULATION_STEPS_PER_FRAME                                                                                 \
     ((SIMULATION_STEPS_PER_SECOND * SIMULATION_TIME_SCALE + MIN_SUPPORTED_RENDER_FPS - 1) / MIN_SUPPORTED_RENDER_FPS)
 
 // Minimum loop items per active job. Also controls how many worker threads are

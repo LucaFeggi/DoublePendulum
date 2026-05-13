@@ -28,12 +28,10 @@ static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_i
     for(size_t i = start_index; i < end_index; i++) {
         float len0 = job->render_len[0];
         float len1 = job->render_len[1];
-        PendulumRenderTrig trig = {
-            .sin0 = sinf(render_frame->pen_data[i].angle[0]),
-            .cos0 = cosf(render_frame->pen_data[i].angle[0]),
-            .sin1 = sinf(render_frame->pen_data[i].angle[1]),
-            .cos1 = cosf(render_frame->pen_data[i].angle[1])
-        };
+        PendulumRenderTrig trig = { .sin0 = sinf(render_frame->pen_data[i].angle[0]),
+                                    .cos0 = cosf(render_frame->pen_data[i].angle[0]),
+                                    .sin1 = sinf(render_frame->pen_data[i].angle[1]),
+                                    .cos1 = cosf(render_frame->pen_data[i].angle[1]) };
 
         int x0 = job->center_x + (int)(len0 * trig.sin0);
         int y0 = job->center_y + (int)(len0 * trig.cos0);
@@ -42,18 +40,17 @@ static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_i
         int y1 = y0 + (int)(len1 * trig.cos1);
 
         SDL_Color color[2];
-        color_get_double_pendulum(&render_frame->pen_data[i], render_frame->len, render_frame->max_ang_vel, &trig, color);
+        color_get_double_pendulum(&render_frame->pen_data[i], render_frame->len, render_frame->max_ang_vel, &trig,
+                                  color);
 
-        PreparedRodLine *rod0 =
-            &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
+        PreparedRodLine *rod0 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
         rod0->x0 = job->center_x;
         rod0->y0 = job->center_y;
         rod0->x1 = x0;
         rod0->y1 = y0;
         rod0->color = color[0];
 
-        PreparedRodLine *rod1 =
-            &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
+        PreparedRodLine *rod1 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
         rod1->x0 = x0;
         rod1->y0 = y0;
         rod1->x1 = x1;
@@ -80,11 +77,7 @@ bool renderer_init(Renderer *renderer, const Window *window) {
         renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
     }
 
-    renderer->ptr = SDL_CreateRenderer(
-        window->ptr,
-        -1,
-        renderer_flags
-    );
+    renderer->ptr = SDL_CreateRenderer(window->ptr, -1, renderer_flags);
     if(renderer->ptr == NULL) {
         SDL_Log("Could not create renderer: %s", SDL_GetError());
         return false;
@@ -92,9 +85,7 @@ bool renderer_init(Renderer *renderer, const Window *window) {
     SDL_SetRenderDrawBlendMode(renderer->ptr, SDL_BLENDMODE_BLEND);
 
     renderer->rod_lines =
-        (PreparedRodLine *)malloc((size_t)TOTAL_PENDULUMS *
-                                  ROD_LINES_PER_PENDULUM *
-                                  sizeof(PreparedRodLine));
+        (PreparedRodLine *)malloc((size_t)TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM * sizeof(PreparedRodLine));
     if(renderer->rod_lines == NULL) {
         SDL_Log("Could not allocate SDL rod line commands.");
         renderer_quit(renderer);
@@ -136,18 +127,14 @@ void renderer_quit(Renderer *renderer) {
     renderer->win_ptr = NULL;
 }
 
-static void renderer_prepare(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w, int h) {
+static void renderer_prepare(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w,
+                             int h) {
     RendererPrepareJob job = {
-        .renderer = renderer,
-        .render_frame = render_frame,
-        .center_x = w / 2,
-        .center_y = h / 2
+        .renderer = renderer, .render_frame = render_frame, .center_x = w / 2, .center_y = h / 2
     };
 
     float max_rend_len = (w < h) ? w / 5.0f : h / 5.0f;
-    float render_scale = render_frame->max_len > 0.0f
-        ? max_rend_len / render_frame->max_len
-        : 0.0f;
+    float render_scale = render_frame->max_len > 0.0f ? max_rend_len / render_frame->max_len : 0.0f;
     job.render_len[0] = render_frame->len[0] * render_scale;
     job.render_len[1] = render_frame->len[1] * render_scale;
 
@@ -164,15 +151,8 @@ static bool renderer_draw_rods(Renderer *renderer) {
 
     for(int i = 0; i < TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM; ++i) {
         const PreparedRodLine *line = &renderer->rod_lines[i];
-        if(!line_batch_add(
-            &renderer->rod_batch,
-            (float)line->x0,
-            (float)line->y0,
-            (float)line->x1,
-            (float)line->y1,
-            ROD_WIDTH_PIXELS,
-            line->color
-        )) {
+        if(!line_batch_add(&renderer->rod_batch, (float)line->x0, (float)line->y0, (float)line->x1, (float)line->y1,
+                           ROD_WIDTH_PIXELS, line->color)) {
             SDL_Log("Could not add rod line to SDL geometry batch.");
             return false;
         }
@@ -189,10 +169,8 @@ static bool renderer_draw_rods(Renderer *renderer) {
 static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     bool render_trails = renderer->trail_enabled;
     if(render_trails) {
-        render_trails =
-            trail_layer_resize(&renderer->trail, renderer->ptr, w, h) &&
-            trail_layer_update(&renderer->trail, renderer->ptr,
-                               renderer->rod_lines, delta_time);
+        render_trails = trail_layer_resize(&renderer->trail, renderer->ptr, w, h)
+                        && trail_layer_update(&renderer->trail, renderer->ptr, renderer->rod_lines, delta_time);
     }
 
     SDL_SetRenderTarget(renderer->ptr, NULL);
@@ -209,7 +187,8 @@ static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     SDL_RenderPresent(renderer->ptr);
 }
 
-void renderer_render(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w, int h, float delta_time) {
+void renderer_render(Renderer *renderer, const RenderFrame *render_frame, ThreadPool *threadpool, int w, int h,
+                     float delta_time) {
     renderer_prepare(renderer, render_frame, threadpool, w, h);
     renderer_draw(renderer, w, h, delta_time);
 }

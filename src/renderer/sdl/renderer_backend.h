@@ -9,8 +9,8 @@
 #include "SDL.h"
 
 typedef struct {
-	SDL_Window *win_ptr;	//owned by Window class
-	SDL_Renderer *ptr;
+    SDL_Window *win_ptr; // owned by Window class
+    SDL_Renderer *ptr;
     PreparedRodLine *rod_lines;
     LineBatch rod_batch;
     TrailLayer trail;

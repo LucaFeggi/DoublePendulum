@@ -3,7 +3,7 @@
 
 // ----- Physics parameters -----
 
-#define PENDULUM_INIT_MODE 0  // 0 -> default, 1 -> custom
+#define PENDULUM_INIT_MODE 0 // 0 -> default, 1 -> custom
 
 // The default rods are both equally initialized, so just one group of defines.
 #define DEFAULT_ANG_VEL 0.0
@@ -34,4 +34,4 @@
 
 #define TOTAL_PENDULUMS 5
 
-#endif  // CONFIG_SIMULATION_CONFIG_H
+#endif // CONFIG_SIMULATION_CONFIG_H

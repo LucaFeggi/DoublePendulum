@@ -23,52 +23,34 @@ static bool simulation_init_from_spec(Simulation *simulation, const SimulationIn
     }
 
     for(size_t i = 0; i < pendulum_count; ++i) {
-        pendulum_state_init(
-            &simulation->state[i],
-            spec->angle[0] + spec->angle_adder[0] * (double)i,
-            spec->ang_vel[0],
-            spec->angle[1] + spec->angle_adder[1] * (double)i,
-            spec->ang_vel[1]
-        );
+        pendulum_state_init(&simulation->state[i], spec->angle[0] + spec->angle_adder[0] * (double)i, spec->ang_vel[0],
+                            spec->angle[1] + spec->angle_adder[1] * (double)i, spec->ang_vel[1]);
     }
 
     return true;
 }
 
 bool simulation_init_custom(Simulation *simulation) {
-    SimulationInitSpec spec = {
-        .params = {
-            .len = { CUSTOM_LEN_ROD1, CUSTOM_LEN_ROD2 },
-            .mass = { CUSTOM_MASS_ROD1, CUSTOM_MASS_ROD2 }
-        },
-        .angle = { CUSTOM_ANGLE_ROD1, CUSTOM_ANGLE_ROD2 },
-        .angle_adder = { CUSTOM_ANGLE_ADDER_ROD1, CUSTOM_ANGLE_ADDER_ROD2 },
-        .ang_vel = { CUSTOM_ANG_VEL_ROD1, CUSTOM_ANG_VEL_ROD2 }
-    };
+    SimulationInitSpec spec = { .params = { .len = { CUSTOM_LEN_ROD1, CUSTOM_LEN_ROD2 },
+                                            .mass = { CUSTOM_MASS_ROD1, CUSTOM_MASS_ROD2 } },
+                                .angle = { CUSTOM_ANGLE_ROD1, CUSTOM_ANGLE_ROD2 },
+                                .angle_adder = { CUSTOM_ANGLE_ADDER_ROD1, CUSTOM_ANGLE_ADDER_ROD2 },
+                                .ang_vel = { CUSTOM_ANG_VEL_ROD1, CUSTOM_ANG_VEL_ROD2 } };
 
     return simulation_init_from_spec(simulation, &spec);
 }
 
 bool simulation_init_default(Simulation *simulation) {
-    SimulationInitSpec spec = {
-        .params = {
-            .len = { DEFAULT_LEN, DEFAULT_LEN },
-            .mass = { DEFAULT_MASS, DEFAULT_MASS }
-        },
-        .angle = { DEFAULT_ANGLE, DEFAULT_ANGLE },
-        .angle_adder = { DEFAULT_ANGLE_ADDER, DEFAULT_ANGLE_ADDER },
-        .ang_vel = { DEFAULT_ANG_VEL, DEFAULT_ANG_VEL }
-    };
+    SimulationInitSpec spec = { .params = { .len = { DEFAULT_LEN, DEFAULT_LEN },
+                                            .mass = { DEFAULT_MASS, DEFAULT_MASS } },
+                                .angle = { DEFAULT_ANGLE, DEFAULT_ANGLE },
+                                .angle_adder = { DEFAULT_ANGLE_ADDER, DEFAULT_ANGLE_ADDER },
+                                .ang_vel = { DEFAULT_ANG_VEL, DEFAULT_ANG_VEL } };
 
     return simulation_init_from_spec(simulation, &spec);
 }
 
-double simulation_update_range(
-    Simulation *simulation,
-    size_t start_index,
-    size_t end_index,
-    int steps
-) {
+double simulation_update_range(Simulation *simulation, size_t start_index, size_t end_index, int steps) {
     if(!simulation || !simulation->state || steps <= 0) {
         return 0.0;
     }
@@ -90,8 +72,10 @@ double simulation_update_range(
 
         double v0 = fabs(simulation->state[i].ang_vel[0]);
         double v1 = fabs(simulation->state[i].ang_vel[1]);
-        if(v0 > local_max_ang_vel) local_max_ang_vel = v0;
-        if(v1 > local_max_ang_vel) local_max_ang_vel = v1;
+        if(v0 > local_max_ang_vel)
+            local_max_ang_vel = v0;
+        if(v1 > local_max_ang_vel)
+            local_max_ang_vel = v1;
     }
 
     return local_max_ang_vel;
