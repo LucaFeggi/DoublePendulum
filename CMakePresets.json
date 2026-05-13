@@ -35,7 +35,7 @@
     },
     {
       "name": "win32-rk4-sdl-release",
-      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe",
+      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe\n",
       "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
@@ -69,7 +69,7 @@
     },
     {
       "name": "posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum\n",
       "inherits": "gcc-ninja",
       "condition": {
         "type": "equals",
@@ -98,7 +98,7 @@
     },
     {
       "name": "win32-rk4-sdl-release",
-      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe",
+      "displayName": "Windows GCC RK4 SDL Release | .\\.build\\win32-rk4-sdl-release\\bin\\DoublePendulum.exe\n",
       "configurePreset": "win32-rk4-sdl-release",
       "condition": {
         "type": "equals",
@@ -118,7 +118,7 @@
     },
     {
       "name": "posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum\n",
       "configurePreset": "posix-rk4-sdl-release",
       "condition": {
         "type": "equals",
@@ -172,7 +172,7 @@
     },
     {
       "name": "posix-rk4-sdl-release",
-      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum",
+      "displayName": "Linux GCC RK4 SDL Release | ./.build/posix-rk4-sdl-release/bin/DoublePendulum\n",
       "steps": [
         {
           "type": "configure",
