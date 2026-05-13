@@ -1,0 +1,10 @@
+/src/** text eol=lf
+/CMakeLists.txt text eol=lf
+/CMakePresets.json text eol=lf
+/README.md text eol=lf
+/.clang-format text eol=lf
+/.gitattributes text eol=lf
+
+*.c linguist-language=C
+*.h linguist-language=C
+externals/** linguist-vendored
