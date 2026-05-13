@@ -4,13 +4,11 @@
 #include "../simulation/simulation.h"
 #include "../simulation/simulation_snapshot.h"
 
-typedef PendulumRenderSample PendulumRenderData;
-
 typedef struct {
     float len[2];
     float max_len;
     float max_ang_vel;
-    PendulumRenderData *pen_data;
+    PendulumRenderSample *pen_data;
 } RenderData;
 
 bool render_data_init(RenderData *render_data, const Simulation *simulation);

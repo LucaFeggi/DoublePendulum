@@ -13,7 +13,7 @@ typedef struct{
 }PendulumTrig;
 
 void color_get_double_pendulum(
-    const PendulumRenderData *pen,
+    const PendulumRenderSample *pen,
     const float len[2],
     float max_ang_vel,
     const PendulumTrig *trig,

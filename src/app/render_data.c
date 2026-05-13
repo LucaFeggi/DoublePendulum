@@ -11,7 +11,7 @@ bool render_data_init(RenderData *rd, const Simulation *sim) {
     rd->len[1] = (float)simulation_get_len(sim, 1);
     rd->max_len = (float)simulation_get_max_len(sim);
     rd->max_ang_vel = 0.0f;
-    rd->pen_data = (PendulumRenderData *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumRenderData));
+    rd->pen_data = (PendulumRenderSample *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumRenderSample));
     if(!rd->pen_data) {
         return false;
     }

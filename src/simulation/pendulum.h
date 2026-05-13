@@ -18,6 +18,7 @@ void pendulum_state_init(
     double angle1,
     double ang_vel1
 );
+
 void pendulum_update(PendulumState *state, const PendulumParams *params);
 
 #endif // SIMULATION_PENDULUM_H
