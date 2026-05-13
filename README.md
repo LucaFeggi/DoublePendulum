@@ -1,26 +1,101 @@
 # DoublePendulum
 
-## Overview
+DoublePendulum is a lightweight real-time double pendulum simulation written in C11 and rendered with SDL2. It is meant to be small enough to read, modify, and use as an educational codebase for numerical integration, simple rendering, and real-time simulation loops.
 
-DoublePendulum is a real-time double pendulum simulation written in C11 and rendered with SDL2. The project focuses on visualizing chaotic motion, experimenting with numerical simulation, rendering a real-time physics system, and keeping the implementation lightweight enough to understand and modify.
+Current scope is narrow on purpose: RK4 is the only integrator, SDL2 is the only renderer, and most runtime behavior is configured with compile-time macros under `src/config/`.
 
 ## Preview
 
-![Single pendulum preview](assets/img/single_pendulum.png)
+![Single double-pendulum simulation preview](assets/img/single_pendulum.png)
 
-![Multiple pendulums preview](assets/img/multiple_pendulums.png)
+![Multiple double-pendulum simulation preview](assets/img/multiple_pendulums.png)
+
+## Quick Start
+
+Clone with the vendored SDL2 submodule:
+
+```sh
+git clone --recurse-submodules <repository-url>
+cd DoublePendulum
+```
+
+If you already cloned without submodules:
+
+```sh
+git submodule update --init --recursive
+```
+
+Build and run a debug build for your host platform.
+
+Windows, from PowerShell:
+
+```powershell
+cmake --workflow --preset win32-rk4-sdl-debug
+.\.build\win32-rk4-sdl-debug\bin\DoublePendulum.exe
+```
+
+Linux, from a POSIX shell:
+
+```sh
+cmake --workflow --preset posix-rk4-sdl-debug
+./.build/posix-rk4-sdl-debug/bin/DoublePendulum
+```
+
+Use the matching `*-release` preset for an optimized build.
+
+## Controls
+
+| Input | Action |
+| --- | --- |
+| Escape | Exit the simulation |
+| Window close button | Exit the simulation |
+
+There are no command-line options.
+
+## Configuration
+
+Most behavior is controlled by compile-time macros. Edit the headers in `src/config/`, then rebuild.
+
+Common changes:
+
+| Goal | Edit |
+| --- | --- |
+| Change the number of pendulums | `TOTAL_PENDULUMS` in `src/config/simulation_config.h` |
+| Speed up or slow down simulation time | `SIMULATION_TIME_SCALE` in `src/config/simulation_config.h` |
+| Change integration timestep | `SIMULATION_STEPS_PER_SECOND` in `src/config/simulation_config.h` |
+| Change starting angles, rod lengths, or masses | `PENDULUM_INIT_MODE` and the default/custom rod macros in `src/config/simulation_config.h` |
+| Enable or disable trails | `TRAIL` in `src/config/render_config.h` |
+| Change rod or trail thickness | `ROD_WIDTH_PER_MILLE`, `TRAIL_WIDTH_PER_MILLE` in `src/config/render_config.h` |
+
+Configuration files:
+
+| File | Important macros |
+| --- | --- |
+| `src/config/simulation_config.h` | `PENDULUM_INIT_MODE`, `DEFAULT_*`, `CUSTOM_*`, `GRAVITY_CENTI`, `G`, `SIMULATION_STEPS_PER_SECOND`, `SIMULATION_DT`, `SIMULATION_TIME_SCALE`, `TOTAL_PENDULUMS` |
+| `src/config/render_config.h` | `COLOR_DECAY_PER_MILLE`, `COLOR_DECAY_REFERENCE_FPS`, `ROD_WIDTH_PER_MILLE`, `ROD_WIDTH_PIXELS`, `TRAIL`, `TRAIL_WIDTH_PER_MILLE`, `TRAIL_DURATION_MILLISECONDS`, `TRAIL_BUCKET_MILLISECONDS`, `TRAIL_FADE_GAMMA_PER_MILLE` |
+| `src/config/app_config.h` | `MIN_SUPPORTED_RENDER_FPS`, `MAX_SIMULATION_STEPS_PER_FRAME`, `THREADPOOL_MIN_ITEMS_PER_JOB` |
+| `src/config/config_validation.h` | `_Static_assert` checks for supported ranges and modes |
+
+`PENDULUM_INIT_MODE` selects how initial conditions are created:
+
+| Value | Behavior |
+| --- | --- |
+| `0` | Both rods use the `DEFAULT_*` values |
+| `1` | Rod 1 and rod 2 use separate `CUSTOM_*_ROD1` and `CUSTOM_*_ROD2` values |
+
+When `TOTAL_PENDULUMS` is greater than 1, each pendulum receives a small index-based angle offset from the relevant `*_ANGLE_ADDER` macro. This makes chaotic divergence visible.
 
 ## Architecture
 
-The project keeps headers next to their implementation files under `src/`; there is no separate top-level `include/` directory.
+Headers live next to implementation files under `src/`; there is no top-level `include/` directory.
 
 ```text
 .
 |-- CMakeLists.txt
 |-- CMakePresets.json
 |-- assets/
-|   `-- icon/
-|       `-- icon.bmp
+|   |-- icon/
+|   `-- img/
 |-- externals/
 |   `-- SDL2-2.32.10/
 `-- src/
@@ -32,34 +107,35 @@ The project keeps headers next to their implementation files under `src/`; there
     `-- utils/
 ```
 
-## Cloning
+Main code areas:
 
-The project vendors SDL2 as a Git submodule. Clone it with submodules enabled:
+| Path | Role |
+| --- | --- |
+| `src/app/` | SDL setup, window lifecycle, input, frame timing, fixed-step app loop |
+| `src/simulation/` | Pendulum state, equations of motion, initialization, integrator interface |
+| `src/simulation/integrators/rk4.c` | RK4 integration implementation |
+| `src/renderer/` | Renderer-facing frame data |
+| `src/renderer/sdl/` | SDL renderer backend, rod batches, trails, color mapping |
+| `src/utils/threadpool.*` | Small worker pool used for larger pendulum counts |
+| `src/config/` | Compile-time configuration and validation |
 
-```sh
-git clone --recurse-submodules <repository-url>
-cd DoublePendulum
-```
-
-If the repository was already cloned without submodules, initialize them before configuring:
-
-```sh
-git submodule update --init --recursive
-```
+The source tree is arranged so more integrators and renderer backends can be added later, but the current supported values are only `rk4` and `sdl`.
 
 ## Build System and Presets
 
-The project uses CMake with the Ninja generator and GCC. `CMakeLists.txt` rejects non-Ninja generators and non-GNU C compilers. It also requires CMake 3.25 or newer and C11 support.
+The supported build path is intentionally narrow to keep configuration predictable:
 
-SDL2 is vendored as a Git submodule at `externals/SDL2-2.32.10` and is configured as a shared library. On Windows with MinGW, the CMake configuration may fetch [`jtsiomb/c11threads`](https://github.com/jtsiomb/c11threads.git) to provide a C11 `<threads.h>` compatibility layer.
+- CMake 3.25 or newer.
+- Ninja generator.
+- GCC C compiler with C11 support.
+- Windows or Linux host.
+- SDL2 vendored as a Git submodule at `externals/SDL2-2.32.10`.
 
-### Available Presets
+`CMakeLists.txt` validates the host platform, generator, compiler, integrator, and renderer. It builds SDL2 as a shared library, disables SDL tests, and copies `assets/` into the executable directory after building.
 
-List the available workflow presets with:
+On Windows with MinGW, the configuration may fetch a pinned `jtsiomb/c11threads` revision to provide a C11 `<threads.h>` compatibility layer. On Linux, the project links `Threads::Threads` and the C math library.
 
-```sh
-cmake --workflow --list-presets
-```
+Available workflow presets:
 
 | Preset | Host | Build type | Platform | Integrator | Renderer | Output executable |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -68,148 +144,77 @@ cmake --workflow --list-presets
 | `posix-rk4-sdl-debug` | Linux | Debug | `posix` | `rk4` | `sdl` | `.build/posix-rk4-sdl-debug/bin/DoublePendulum` |
 | `posix-rk4-sdl-release` | Linux | Release | `posix` | `rk4` | `sdl` | `.build/posix-rk4-sdl-release/bin/DoublePendulum` |
 
-Release builds enable CMake's Release configuration and try to enable IPO/LTO when the toolchain supports it.
-
-### Integrator and Renderer Selection
-
-The codebase is structured so integrators and renderers can be selected at compile time. CMake currently binds `DP_INTEGRATOR=rk4` and `DP_RENDERER=sdl` through the workflow presets, and `CMakeLists.txt` validates those values against the supported lists.
-
-At the moment, `rk4` is the only supported integrator and `sdl` is the only supported renderer. Future integrators and renderer backends can be added by extending the supported CMake values, wiring their source files in `CMakeLists.txt`, and adding workflow presets that select the desired combination.
-
-### Configure and Build
-
-Use the workflow preset for your host platform and build type. Workflow presets run the configure and build steps defined in `CMakePresets.json`.
-
-Windows debug:
-
-```powershell
-cmake --workflow --preset win32-rk4-sdl-debug
-```
-
-Windows release:
-
-```powershell
-cmake --workflow --preset win32-rk4-sdl-release
-```
-
-Linux debug:
+List presets:
 
 ```sh
-cmake --workflow --preset posix-rk4-sdl-debug
+cmake --workflow --list-presets
 ```
 
-Linux release:
+Run a full configure-and-build workflow:
 
 ```sh
-cmake --workflow --preset posix-rk4-sdl-release
+cmake --workflow --preset <preset>
 ```
+
+Release builds use CMake's `Release` configuration and try to enable IPO/LTO when supported by the toolchain.
 
 ## Running the Simulation
 
-Run the executable produced by the selected preset.
+Run the executable from the matching preset output directory.
 
-Windows debug:
+Windows:
 
 ```powershell
 .\.build\win32-rk4-sdl-debug\bin\DoublePendulum.exe
-```
-
-Windows release:
-
-```powershell
 .\.build\win32-rk4-sdl-release\bin\DoublePendulum.exe
 ```
 
-Linux debug:
+Linux:
 
 ```sh
 ./.build/posix-rk4-sdl-debug/bin/DoublePendulum
-```
-
-Linux release:
-
-```sh
 ./.build/posix-rk4-sdl-release/bin/DoublePendulum
 ```
 
-The app has no command-line options. Close the window or press Escape to quit.
-
-The executable loads `assets/icon/icon.bmp` with a relative path. The build copies `assets/` into the executable directory after build, and the same `assets/` directory also exists at the repository root.
-
-## Modifying Simulation Parameters
-
-Most runtime behavior is configured with compile-time macros. After changing them, reconfigure or rebuild as needed.
-
-### Physics Parameters
-
-Edit `src/config/simulation_config.h`:
-
-- `PENDULUM_INIT_MODE`: `0` selects the default initialization, `1` selects the custom rod-specific initialization.
-- `DEFAULT_ANG_VEL`, `DEFAULT_LEN`, `DEFAULT_MASS`, `DEFAULT_ANGLE`, `DEFAULT_ANGLE_ADDER`: default mode values shared by both rods.
-- `CUSTOM_ANG_VEL_ROD1`, `CUSTOM_LEN_ROD1`, `CUSTOM_MASS_ROD1`, `CUSTOM_ANGLE_ROD1`, `CUSTOM_ANGLE_ADDER_ROD1`: custom mode values for rod 1.
-- `CUSTOM_ANG_VEL_ROD2`, `CUSTOM_LEN_ROD2`, `CUSTOM_MASS_ROD2`, `CUSTOM_ANGLE_ROD2`, `CUSTOM_ANGLE_ADDER_ROD2`: custom mode values for rod 2.
-- `GRAVITY_CENTI` and `G`: gravitational acceleration. The default is `981`, which makes `G` equal to `9.81`.
-- `SIMULATION_STEPS_PER_SECOND` and `SIMULATION_DT`: fixed simulation timestep.
-- `SIMULATION_TIME_SCALE`: multiplier applied to elapsed real time before consuming simulation steps.
-- `TOTAL_PENDULUMS`: number of pendulums allocated and rendered.
-
-The simulation can run one or more pendulums. The current default is `TOTAL_PENDULUMS == 5`; each pendulum starts with an index-based angle offset from the relevant `*_ANGLE_ADDER` macro, which makes chaotic divergence visible over time.
-
-### Rendering Parameters
-
-Edit `src/config/render_config.h`:
-
-- `COLOR_DECAY_PER_MILLE` and `COLOR_DECAY_REFERENCE_FPS`: control decay of the maximum angular velocity used for color normalization.
-- `ROD_WIDTH_PER_MILLE` and `ROD_WIDTH_PIXELS`: rod thickness.
-- `TRAIL`: enables or disables trail rendering.
-- `TRAIL_WIDTH_PER_MILLE` and `TRAIL_WIDTH_PIXELS`: trail thickness.
-- `TRAIL_DURATION_MILLISECONDS`: total visible trail lifetime.
-- `TRAIL_BUCKET_MILLISECONDS`: duration represented by each trail render-target bucket.
-- `TRAIL_FADE_GAMMA_PER_MILLE`: shapes trail alpha falloff.
-
-Rod colors are defined in the `spectrum` array in `src/renderer/sdl/color.c`.
-
-### Application Loop Parameters
-
-Edit `src/config/app_config.h`:
-
-- `MIN_SUPPORTED_RENDER_FPS`: lowest render FPS where the app should still try to keep the configured simulation speed before dropping accumulated simulation time.
-- `MAX_SIMULATION_STEPS_PER_FRAME`: derived cap for fixed simulation steps consumed in one rendered frame.
-- `THREADPOOL_MIN_ITEMS_PER_JOB`: controls how many pendulums are needed before the app creates useful worker jobs.
-
-`src/config/config_validation.h` validates these values with `_Static_assert`.
+The executable loads `assets/icon/icon.bmp` through a relative path. The build copies the full `assets/` directory into the executable directory, so the copied binary has the icon and preview assets beside it.
 
 ## Technical Notes
 
-The implementation is split by responsibility:
-
-- `src/app/`: SDL window setup, input, frame timing, and the fixed-step application loop.
-- `src/simulation/`: pendulum state, equations of motion, initialization, and RK4 integration.
-- `src/renderer/sdl/`: SDL rendering, screen-space conversion, rods, trails, and color mapping.
-- `src/config/`: compile-time parameters and validation.
-
-A few design choices are useful to know before changing behavior:
-
-- Simulation advances with fixed `SIMULATION_DT` steps; the app accumulates scaled frame time and caps per-frame catch-up work with `MAX_SIMULATION_STEPS_PER_FRAME`.
-- Positions are derived for rendering instead of stored in the simulation state.
-- Multiple pendulums use index-based initial angle offsets to make chaotic divergence visible.
-- Rods and trails are batched through `SDL_RenderGeometry`.
-- Trail history is stored in render-target texture buckets rather than rebuilt from CPU-side point lists each frame.
-- Worker threads are only useful for larger `TOTAL_PENDULUMS` values; the default workload is intentionally small.
+- Simulation advances in fixed `SIMULATION_DT` steps.
+- Real frame time is scaled by `SIMULATION_TIME_SCALE` before fixed steps are consumed.
+- `MAX_SIMULATION_STEPS_PER_FRAME` caps catch-up work if rendering falls behind.
+- Window title updates with approximate simulation steps per second and renderer FPS.
+- Pendulum positions are derived for rendering instead of stored as simulation state.
+- Rods and trails are batched through SDL geometry calls.
+- Trails are stored in render-target texture buckets and faded by age.
+- Worker threads are capped by CPU count and by `THREADPOOL_MIN_ITEMS_PER_JOB`; with the default `TOTAL_PENDULUMS == 5`, the workload stays intentionally small.
 
 ## Dependencies
 
-Required tools and libraries:
+Required:
 
-- CMake 3.25 or newer.
-- Ninja.
-- GCC with C11 support.
-- C11 threads support through `<threads.h>`.
-- Git, for initializing the SDL2 submodule.
-- SDL2 2.32.10, vendored under `externals/SDL2-2.32.10`.
+| Dependency | Notes |
+| --- | --- |
+| CMake 3.25+ | Uses workflow presets version 6 |
+| Ninja | Required generator |
+| GCC | Required C compiler |
+| Git | Needed for SDL2 submodule setup |
+| SDL2 2.32.10 | Vendored under `externals/SDL2-2.32.10` |
+| C11 threads support | Native `<threads.h>` where available; MinGW fallback handled during CMake configure |
 
-Platform notes:
+## Platform Notes
 
-- Windows builds are intended for GCC/MinGW and use the `win32-*` presets.
-- Linux builds use the `posix-*` presets and link against the C math library and CMake `Threads::Threads`.
-- Other host platforms are rejected by `CMakeLists.txt`.
+Windows users should use the `win32-*` presets from a shell where `gcc`, `cmake`, and `ninja` are available.
+
+Linux users should use the `posix-*` presets. Other host platforms are currently rejected by the CMake configuration.
+
+## Project Status
+
+DoublePendulum is an educational simulation project, not a general physics engine. Current supported combinations are:
+
+| Area | Current support |
+| --- | --- |
+| Integrator | RK4 only |
+| Renderer | SDL2 only |
+| Platforms | Windows and Linux |
+| Tests | No project-specific test targets found; vendored SDL tests are disabled by this build |
