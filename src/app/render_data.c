@@ -6,10 +6,31 @@
 #include <math.h>
 #include <stdlib.h>
 
+static float render_data_compute_max_len(const float len[2]) {
+    return len[0] > len[1] ? len[0] : len[1];
+}
+
+static float render_data_compute_max_ang_vel(const PendulumRenderSample *samples, size_t count) {
+    float max_ang_vel = 0.0f;
+
+    if(!samples) {
+        return max_ang_vel;
+    }
+
+    for(size_t i = 0; i < count; ++i) {
+        float v0 = fabsf(samples[i].ang_vel[0]);
+        float v1 = fabsf(samples[i].ang_vel[1]);
+        if(v0 > max_ang_vel) max_ang_vel = v0;
+        if(v1 > max_ang_vel) max_ang_vel = v1;
+    }
+
+    return max_ang_vel;
+}
+
 bool render_data_init(RenderData *rd, const Simulation *sim) {
     rd->len[0] = (float)simulation_get_len(sim, 0);
     rd->len[1] = (float)simulation_get_len(sim, 1);
-    rd->max_len = (float)simulation_get_max_len(sim);
+    rd->max_len = render_data_compute_max_len(rd->len);
     rd->max_ang_vel = 0.0f;
     rd->pen_data = (PendulumRenderSample *)malloc((size_t)TOTAL_PENDULUMS * sizeof(PendulumRenderSample));
     if(!rd->pen_data) {
@@ -17,6 +38,7 @@ bool render_data_init(RenderData *rd, const Simulation *sim) {
     }
 
     simulation_fill_render_samples(sim, rd->pen_data, (size_t)TOTAL_PENDULUMS);
+    rd->max_ang_vel = render_data_compute_max_ang_vel(rd->pen_data, (size_t)TOTAL_PENDULUMS);
     return true;
 }
 
@@ -41,8 +63,7 @@ static float render_data_color_decay_for_delta_time(float delta_time) {
     return powf((float)COLOR_DECAY, delta_time * (float)COLOR_DECAY_REFERENCE_FPS);
 }
 
-void render_data_pack(RenderData *rd, const Simulation *sim, float delta_time) {
-    float current_max_ang_vel = (float)simulation_get_max_ang_vel(sim);
+void render_data_pack(RenderData *rd, const Simulation *sim, float current_max_ang_vel, float delta_time) {
     float decayed_max_ang_vel = rd->max_ang_vel * render_data_color_decay_for_delta_time(delta_time);
     rd->max_ang_vel = current_max_ang_vel > decayed_max_ang_vel
         ? current_max_ang_vel

@@ -12,20 +12,8 @@ typedef struct {
     double ang_vel[2];
 } SimulationInitSpec;
 
-static double simulation_compute_max_len(const PendulumParams *params) {
-    return params->len[0] > params->len[1] ? params->len[0] : params->len[1];
-}
-
-static double simulation_compute_initial_max_ang_vel(const double ang_vel[2]) {
-    double v0 = fabs(ang_vel[0]);
-    double v1 = fabs(ang_vel[1]);
-    return v0 > v1 ? v0 : v1;
-}
-
 static bool simulation_init_from_spec(Simulation *simulation, const SimulationInitSpec *spec) {
     simulation->params = spec->params;
-    simulation->max_len = simulation_compute_max_len(&simulation->params);
-    simulation->max_ang_vel = simulation_compute_initial_max_ang_vel(spec->ang_vel);
     simulation->state = NULL;
 
     const size_t pendulum_count = (size_t)TOTAL_PENDULUMS;
@@ -109,12 +97,12 @@ double simulation_update_range(
     return local_max_ang_vel;
 }
 
-void simulation_update_steps(Simulation *simulation, int steps) {
+double simulation_update_steps(Simulation *simulation, int steps) {
     if(!simulation || !simulation->state || steps <= 0) {
-        return;
+        return 0.0;
     }
 
-    simulation->max_ang_vel = simulation_update_range(simulation, (size_t)0, (size_t)TOTAL_PENDULUMS, steps);
+    return simulation_update_range(simulation, (size_t)0, (size_t)TOTAL_PENDULUMS, steps);
 }
 
 void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, size_t count) {
@@ -135,12 +123,6 @@ void simulation_fill_render_samples(const Simulation *simulation, PendulumRender
     }
 }
 
-void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel) {
-    if(simulation) {
-        simulation->max_ang_vel = max_ang_vel;
-    }
-}
-
 size_t simulation_get_count(const Simulation *simulation) {
     return simulation && simulation->state ? (size_t)TOTAL_PENDULUMS : (size_t)0;
 }
@@ -153,14 +135,6 @@ double simulation_get_len(const Simulation *simulation, int rod_index) {
     return simulation->params.len[rod_index];
 }
 
-double simulation_get_max_len(const Simulation *simulation) {
-    return simulation ? simulation->max_len : 0.0;
-}
-
-double simulation_get_max_ang_vel(const Simulation *simulation) {
-    return simulation ? simulation->max_ang_vel : 0.0;
-}
-
 void simulation_quit(Simulation *simulation) {
     if(!simulation) {
         return;
@@ -170,6 +144,4 @@ void simulation_quit(Simulation *simulation) {
     simulation->state = NULL;
 
     simulation->params = (PendulumParams){ 0 };
-    simulation->max_len = 0.0;
-    simulation->max_ang_vel = 0.0;
 }

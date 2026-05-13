@@ -94,7 +94,12 @@ static bool app_can_parallelize_simulation(const App *app) {
 }
 
 static void app_update_simulation_steps(App *app, int steps) {
-    if(steps <= 0 || !app_can_parallelize_simulation(app)) {
+    if(steps <= 0) {
+        return;
+    }
+
+    if(!app_can_parallelize_simulation(app)) {
+        app->current_max_ang_vel = simulation_update_steps(&app->simulation, steps);
         return;
     }
 
@@ -115,7 +120,7 @@ static void app_update_simulation_steps(App *app, int steps) {
     );
 
     if(active_jobs > 0) {
-        simulation_set_max_ang_vel(&app->simulation, app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity));
+        app->current_max_ang_vel = app_reduce_max_ang_vel(app->thread_max_ang_vel, app->thread_max_capacity);
     }
 }
 
@@ -135,6 +140,7 @@ static int app_consume_simulation_steps(Fps *fps) {
 
 bool app_init(App *app) {
     app->threadpool_enabled = false;
+    app->current_max_ang_vel = 0.0;
     app->thread_max_ang_vel = NULL;
     app->thread_max_capacity = 0;
 
@@ -169,6 +175,7 @@ bool app_init(App *app) {
     }
     if(!window_init(&app->window)) goto fail_window;
     if(!render_data_init(&app->render_data, &app->simulation)) goto fail_render_data;
+    app->current_max_ang_vel = (double)app->render_data.max_ang_vel;
     if(!renderer_init(&app->renderer, &app->window)) goto fail_renderer;
 
     window_show(&app->window);
@@ -223,7 +230,7 @@ void app_run(App *app) {
         window_update_title(&app->window, app->fps.delta_time, app->fps.render_fps, app->fps.sim_steps_per_second);
 
         if(window_get_render_size(&app->window, &w, &h)) {
-            render_data_pack(&app->render_data, &app->simulation, (float)app->fps.delta_time);
+            render_data_pack(&app->render_data, &app->simulation, (float)app->current_max_ang_vel, (float)app->fps.delta_time);
             renderer_render(&app->renderer, &app->render_data, app_get_threadpool(app), w, h, (float)app->fps.delta_time);
         }
         else {

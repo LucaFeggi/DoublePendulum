@@ -10,20 +10,15 @@
 typedef struct {
     PendulumParams params;
     PendulumState *state;
-    double max_len;
-    double max_ang_vel;
 } Simulation;
 
 bool simulation_init_custom(Simulation *simulation);
 bool simulation_init_default(Simulation *simulation);
 double simulation_update_range(Simulation *simulation, size_t start_index, size_t end_index, int steps);
-void simulation_update_steps(Simulation *simulation, int steps);
+double simulation_update_steps(Simulation *simulation, int steps);
 void simulation_fill_render_samples(const Simulation *simulation, PendulumRenderSample *out, size_t count);
-void simulation_set_max_ang_vel(Simulation *simulation, double max_ang_vel);
 size_t simulation_get_count(const Simulation *simulation);
 double simulation_get_len(const Simulation *simulation, int rod_index);
-double simulation_get_max_len(const Simulation *simulation);
-double simulation_get_max_ang_vel(const Simulation *simulation);
 void simulation_quit(Simulation *simulation);
 
 #endif // SIMULATION_SIMULATION_H
