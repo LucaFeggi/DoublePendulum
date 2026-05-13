@@ -192,6 +192,15 @@ static bool trail_layer_ensure_size(TrailLayer* trail, SDL_Renderer* renderer,
   return trail_layer_recreate_textures(trail, renderer, w, h);
 }
 
+bool trail_layer_resize(TrailLayer* trail, SDL_Renderer* renderer, int w,
+                        int h) {
+  if(!trail || !renderer) {
+    return false;
+  }
+
+  return trail_layer_ensure_size(trail, renderer, w, h);
+}
+
 static bool trail_layer_clear_bucket(TrailLayer* trail, SDL_Renderer* renderer,
                                      int bucket_index) {
   SDL_Texture* old_target = SDL_GetRenderTarget(renderer);
@@ -262,13 +271,13 @@ static Uint8 trail_layer_alpha_for_age(float age_seconds) {
 }
 
 bool trail_layer_update(TrailLayer* trail, SDL_Renderer* renderer,
-                        const RenderLine* rod_lines, int w, int h,
-                        float delta_time) {
-  if(!trail || !renderer || !rod_lines || trail->pendulum_count <= 0) {
+                        const PreparedRodLine* rod_lines, float delta_time) {
+  if(!trail || !renderer || !rod_lines || trail->pendulum_count <= 0 ||
+     trail->bucket_count <= 0) {
     return false;
   }
 
-  if(!trail_layer_ensure_size(trail, renderer, w, h)) {
+  if(!trail->buckets || !trail->buckets[trail->current_bucket].texture) {
     return false;
   }
 
@@ -289,7 +298,8 @@ bool trail_layer_update(TrailLayer* trail, SDL_Renderer* renderer,
   line_batch_reset(&trail->line_batch);
 
   for(int i = 0; i < trail->pendulum_count; ++i) {
-    const RenderLine* tip_rod = &rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
+    const PreparedRodLine* tip_rod =
+        &rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
     SDL_FPoint tip = {(float)tip_rod->x1, (float)tip_rod->y1};
 
     if(trail->has_last[i]) {

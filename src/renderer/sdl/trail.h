@@ -12,7 +12,7 @@ typedef struct {
     int x1;
     int y1;
     SDL_Color color;
-} RenderLine;
+} PreparedRodLine;
 
 typedef struct {
     SDL_Texture *texture;
@@ -33,7 +33,8 @@ typedef struct {
 
 bool trail_layer_init(TrailLayer *trail, int pendulum_count);
 void trail_layer_quit(TrailLayer *trail);
-bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const RenderLine *rod_lines, int w, int h, float delta_time);
+bool trail_layer_resize(TrailLayer *trail, SDL_Renderer *renderer, int w, int h);
+bool trail_layer_update(TrailLayer *trail, SDL_Renderer *renderer, const PreparedRodLine *rod_lines, float delta_time);
 void trail_layer_draw(const TrailLayer *trail, SDL_Renderer *renderer);
 
 #endif // RENDERER_SDL_TRAIL_H

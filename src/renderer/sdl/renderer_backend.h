@@ -11,7 +11,7 @@
 typedef struct {
 	SDL_Window *win_ptr;	//owned by Window class
 	SDL_Renderer *ptr;
-    RenderLine *rod_lines;
+    PreparedRodLine *rod_lines;
     LineBatch rod_batch;
     TrailLayer trail;
     bool trail_enabled;

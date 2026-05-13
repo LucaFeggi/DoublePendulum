@@ -44,14 +44,16 @@ static void renderer_prepare_range(const RendererPrepareJob *job, size_t start_i
         SDL_Color color[2];
         color_get_double_pendulum(&render_data->pen_data[i], render_data->len, render_data->max_ang_vel, &trig, color);
 
-        RenderLine *rod0 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
+        PreparedRodLine *rod0 =
+            &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM];
         rod0->x0 = job->center_x;
         rod0->y0 = job->center_y;
         rod0->x1 = x0;
         rod0->y1 = y0;
         rod0->color = color[0];
 
-        RenderLine *rod1 = &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
+        PreparedRodLine *rod1 =
+            &renderer->rod_lines[i * ROD_LINES_PER_PENDULUM + 1];
         rod1->x0 = x0;
         rod1->y0 = y0;
         rod1->x1 = x1;
@@ -89,7 +91,10 @@ bool renderer_init(Renderer *renderer, const Window *window) {
     }
     SDL_SetRenderDrawBlendMode(renderer->ptr, SDL_BLENDMODE_BLEND);
 
-    renderer->rod_lines = (RenderLine *)malloc((size_t)TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM * sizeof(RenderLine));
+    renderer->rod_lines =
+        (PreparedRodLine *)malloc((size_t)TOTAL_PENDULUMS *
+                                  ROD_LINES_PER_PENDULUM *
+                                  sizeof(PreparedRodLine));
     if(renderer->rod_lines == NULL) {
         SDL_Log("Could not allocate SDL rod line commands.");
         renderer_quit(renderer);
@@ -158,7 +163,7 @@ static bool renderer_draw_rods(Renderer *renderer) {
     line_batch_reset(&renderer->rod_batch);
 
     for(int i = 0; i < TOTAL_PENDULUMS * ROD_LINES_PER_PENDULUM; ++i) {
-        const RenderLine *line = &renderer->rod_lines[i];
+        const PreparedRodLine *line = &renderer->rod_lines[i];
         if(!line_batch_add(
             &renderer->rod_batch,
             (float)line->x0,
@@ -184,7 +189,10 @@ static bool renderer_draw_rods(Renderer *renderer) {
 static void renderer_draw(Renderer *renderer, int w, int h, float delta_time) {
     bool render_trails = renderer->trail_enabled;
     if(render_trails) {
-        trail_layer_update(&renderer->trail, renderer->ptr, renderer->rod_lines, w, h, delta_time);
+        render_trails =
+            trail_layer_resize(&renderer->trail, renderer->ptr, w, h) &&
+            trail_layer_update(&renderer->trail, renderer->ptr,
+                               renderer->rod_lines, delta_time);
     }
 
     SDL_SetRenderTarget(renderer->ptr, NULL);
